@@ -103,8 +103,8 @@ export default function GradientHero() {
                 <Image
                   src={"/hero.png"}
                   alt="dashboard"
-                  width={800}
-                  height={600}
+                  width={1920}
+                  height={1080}
                 />
                 <div className="from-background absolute inset-0 bg-gradient-to-t to-transparent opacity-0"></div>
               </div>
