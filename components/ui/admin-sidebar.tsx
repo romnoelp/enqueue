@@ -41,12 +41,12 @@ import {
 } from "./dropdown-menu";
 
 const menuItems = [
-  { title: "Employees", icon: Users, href: "#users" },
-  { title: "Station", icon: QrCode, href: "#content" },
-  { title: "Pending Accounts", icon: Clock, href: "#activity" },
-  { title: "Blacklisted", icon: ShieldMinus, href: "#database" },
-  { title: "Activity", icon: Activity, href: "#security" },
-  { title: "Analytics", icon: BarChart3, href: "#analytics" },
+  { title: "Employees", icon: Users, href: "/employees" },
+  { title: "Stations", icon: QrCode, href: "/stations" },
+  { title: "Pending Accounts", icon: Clock, href: "/pending-accounts" },
+  { title: "Blacklisted", icon: ShieldMinus, href: "/blacklisted" },
+  { title: "Activity", icon: Activity, href: "/activity-logs" },
+  { title: "Analytics", icon: BarChart3, href: "/analytics" },
 ];
 
 export const AdminSidebar = memo(() => {
@@ -62,7 +62,7 @@ export const AdminSidebar = memo(() => {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link prefetch={false} href="#dashboard">
+              <Link prefetch={false} href="/dashboard">
                 <div className=" flex aspect-square size-8 items-center justify-center rounded-lg">
                   <Image
                     src={"/neu.png"}
