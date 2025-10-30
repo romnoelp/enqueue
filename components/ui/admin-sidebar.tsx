@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { memo } from 'react';
-import { useTheme } from 'next-themes';
-import Link from 'next/link';
+import { memo } from "react";
+import { useTheme } from "next-themes";
+import Link from "next/link";
 import {
   Sidebar,
   SidebarContent,
@@ -15,7 +15,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-} from '@/components/ui/sidebar';
+} from "@/components/ui/sidebar";
 import {
   LayoutDashboard,
   Users,
@@ -30,19 +30,26 @@ import {
   Moon,
   Sun,
   User,
-} from 'lucide-react';
+  User2,
+  ChevronUp,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./dropdown-menu";
 
 const menuItems = [
-  { title: 'Dashboard', icon: LayoutDashboard, href: '#dashboard' },
-  { title: 'Analytics', icon: BarChart3, href: '#analytics' },
-  { title: 'Users', icon: Users, href: '#users' },
-  { title: 'Content', icon: FileText, href: '#content' },
-  { title: 'Activity', icon: Activity, href: '#activity' },
-  { title: 'Database', icon: Database, href: '#database' },
-  { title: 'Security', icon: Shield, href: '#security' },
-  { title: 'Performance', icon: Zap, href: '#performance' },
-  { title: 'Notifications', icon: Bell, href: '#notifications' },
-  { title: 'Settings', icon: Settings, href: '#settings' },
+  { title: "Analytics", icon: BarChart3, href: "#analytics" },
+  { title: "Users", icon: Users, href: "#users" },
+  { title: "Content", icon: FileText, href: "#content" },
+  { title: "Activity", icon: Activity, href: "#activity" },
+  { title: "Database", icon: Database, href: "#database" },
+  { title: "Security", icon: Shield, href: "#security" },
+  { title: "Performance", icon: Zap, href: "#performance" },
+  { title: "Notifications", icon: Bell, href: "#notifications" },
+  { title: "Settings", icon: Settings, href: "#settings" },
 ];
 
 export const AdminSidebar = memo(() => {
@@ -59,7 +66,7 @@ export const AdminSidebar = memo(() => {
                   <LayoutDashboard className="h-5 w-5" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">TechCorp</span>
+                  <span className="truncate font-semibold">enQueue</span>
                   <span className="truncate text-xs">Admin Panel</span>
                 </div>
               </Link>
@@ -70,7 +77,7 @@ export const AdminSidebar = memo(() => {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel>Actions</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
@@ -89,25 +96,37 @@ export const AdminSidebar = memo(() => {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        <SidebarGroup></SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             >
-              {theme === 'dark' ? <Sun /> : <Moon />}
-              <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+              {theme === "dark" ? <Sun /> : <Moon />}
+              <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
+
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link prefetch={false} href="#profile">
-                <User />
-                <span>Admin Profile</span>
-              </Link>
-            </SidebarMenuButton>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton>
+                  <User2 /> Username
+                  <ChevronUp className="ml-auto" />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                side="top"
+                className="w-[--radix-popper-anchor-width]"
+              >
+                <DropdownMenuItem>
+                  <span>Sign out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
@@ -116,4 +135,4 @@ export const AdminSidebar = memo(() => {
   );
 });
 
-AdminSidebar.displayName = 'AdminSidebar';
+AdminSidebar.displayName = "AdminSidebar";
