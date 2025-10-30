@@ -1,38 +1,38 @@
 "use client";
 
-import { memo } from "react";
-import { useTheme } from "next-themes";
+import React, { memo, useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarRail,
-} from "@/components/ui/sidebar";
+import Image from "next/image";
+import { useTheme } from "next-themes";
+
 import {
   LayoutDashboard,
   Users,
-  BarChart3,
-  FileText,
   Activity,
-  Database,
-  Shield,
-  Zap,
-  Bell,
-  Settings,
+  BarChart3,
+  ShieldMinus,
+  QrCode,
+  Clock,
   Moon,
   Sun,
-  User,
   User2,
   ChevronUp,
 } from "lucide-react";
+
+import {
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
+  SidebarFooter,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarRail,
+} from "@/components/ui/sidebar";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,19 +41,20 @@ import {
 } from "./dropdown-menu";
 
 const menuItems = [
+  { title: "Employees", icon: Users, href: "#users" },
+  { title: "Station", icon: QrCode, href: "#content" },
+  { title: "Pending Accounts", icon: Clock, href: "#activity" },
+  { title: "Blacklisted", icon: ShieldMinus, href: "#database" },
+  { title: "Activity", icon: Activity, href: "#security" },
   { title: "Analytics", icon: BarChart3, href: "#analytics" },
-  { title: "Users", icon: Users, href: "#users" },
-  { title: "Content", icon: FileText, href: "#content" },
-  { title: "Activity", icon: Activity, href: "#activity" },
-  { title: "Database", icon: Database, href: "#database" },
-  { title: "Security", icon: Shield, href: "#security" },
-  { title: "Performance", icon: Zap, href: "#performance" },
-  { title: "Notifications", icon: Bell, href: "#notifications" },
-  { title: "Settings", icon: Settings, href: "#settings" },
 ];
 
 export const AdminSidebar = memo(() => {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch by only rendering theme-dependent UI after mount
+  useEffect(() => setMounted(true), []);
 
   return (
     <Sidebar collapsible="icon">
@@ -62,8 +63,13 @@ export const AdminSidebar = memo(() => {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link prefetch={false} href="#dashboard">
-                <div className="bg-primary text-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <LayoutDashboard className="h-5 w-5" />
+                <div className=" flex aspect-square size-8 items-center justify-center rounded-lg">
+                  <Image
+                    src={"/neu.png"}
+                    alt="NEU Logo"
+                    width={80}
+                    height={80}
+                  />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">enQueue</span>
@@ -96,7 +102,6 @@ export const AdminSidebar = memo(() => {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        <SidebarGroup></SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>
@@ -105,8 +110,23 @@ export const AdminSidebar = memo(() => {
             <SidebarMenuButton
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             >
-              {theme === "dark" ? <Sun /> : <Moon />}
-              <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+              {mounted ? (
+                theme === "dark" ? (
+                  <Sun />
+                ) : (
+                  <Moon />
+                )
+              ) : (
+                // placeholder to maintain layout before mount
+                <div style={{ width: 24, height: 24 }} />
+              )}
+              <span>
+                {mounted
+                  ? theme === "dark"
+                    ? "Light Mode"
+                    : "Dark Mode"
+                  : "Theme"}
+              </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
 
@@ -130,6 +150,7 @@ export const AdminSidebar = memo(() => {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
+
       <SidebarRail />
     </Sidebar>
   );
