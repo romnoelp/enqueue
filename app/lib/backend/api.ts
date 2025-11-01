@@ -1,41 +1,18 @@
-import { auth } from "./firebase";
-
-const getToken = async (forceRefresh = false) => {
-  const user = auth.currentUser;
-  if (user) return await user.getIdToken(forceRefresh);
-
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("token");
-    if (token) return token;
-  }
-
-  return "";
-};
-
+// Fetch wrapper for API routes with Better Auth cookie-based sessions
 export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
-  const token = await getToken();
   const headers = new Headers(options.headers);
 
   headers.set("Content-Type", "application/json");
   headers.set("Accept", "application/json");
-  if (token) headers.set("Authorization", `Bearer ${token}`);
 
-  const url = `${process.env.NEXT_PUBLIC_CUID_REQUEST_URL}${endpoint}`;
-  const response = await fetch(url, { ...options, headers, cache: "no-store" });
-
-  if (response.status === 401) {
-    const newToken = await getToken(true);
-    if (newToken) {
-      const retryHeaders = new Headers(headers);
-      retryHeaders.set("Authorization", `Bearer ${newToken}`);
-
-      return fetch(url, {
-        ...options,
-        headers: retryHeaders,
-        cache: "no-store",
-      });
-    }
-  }
+  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}${endpoint}`;
+  
+  const response = await fetch(url, { 
+    ...options, 
+    headers, 
+    cache: "no-store",
+    credentials: "include", // Include cookies for Better Auth session
+  });
 
   if (!response.ok) {
     const message = await response.text();
