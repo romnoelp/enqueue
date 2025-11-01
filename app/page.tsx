@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useState } from "react";
 import BounceLoader from "@/components/mvpblocks/bouncing-loader";
-import signIn from "./lib/signin";
+import signIn from "./lib/authentication/signin";
 
 export default function GradientHero() {
   const [clicked, setClicked] = useState<boolean>(false);

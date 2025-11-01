@@ -35,8 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { authClient } from "@/app/lib/auth-client";
-
+import { authClient } from "@/app/lib/authentication/auth-client";
 import ModeToggle from "../theming/ModeToggle";
 import { Avatar, AvatarImage, AvatarFallback } from "./avatar";
 import { Button } from "./button";

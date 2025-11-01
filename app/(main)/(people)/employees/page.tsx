@@ -1,15 +1,19 @@
 "use client";
 
-import { authClient } from "@/app/lib/auth-client";
+import { apiFetch } from "@/app/lib/backend/api";
+import { useEffect, useState } from "react";
 
 const Employees = () => {
-  const {
-    data: session,
-    isPending, //loading state
-    error, //error object
-    refetch, //refetch the session
-  } = authClient.useSession();
+  const [employees, setEmployees] = useState<any>(null);
 
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      const data = await apiFetch("/admin/employees");
+      setEmployees(data);
+    };
+    fetchEmployees();
+  }, []);
+  console.log("Emp", employees);
   return <div>Employees page</div>;
 };
 
