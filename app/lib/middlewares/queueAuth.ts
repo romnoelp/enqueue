@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { firestoreDb } from "../backend/firebase-admin";
-import { TokenType } from "../../../types";
+import { TokenType, QueueTokenPayload } from "../../../types";
 import { verifyToken } from "../utils/jwt";
 
 export type QueueTokenResult =
-  | { success: true; token: string; id: string }
+  | { success: true; token: string; decodedToken: QueueTokenPayload }
   | { success: false; response: NextResponse };
 
 // Verify JWT token and check type for queue operations
@@ -69,7 +69,7 @@ export const verifyQueueToken = async (
       };
     }
 
-    return { success: true, token, id: decoded.id };
+    return { success: true, token, decodedToken: decoded as QueueTokenPayload };
   } catch (error) {
     const err = error as { name?: string; message?: string };
 

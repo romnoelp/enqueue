@@ -104,6 +104,7 @@ export const POST = async (request: NextRequest) => {
         const queueToken = await generateToken(
           {
             id: queueIDWithPrefix,
+            queueID: queueIDWithPrefix,
             stationID,
             email,
             type: "queue-status",
