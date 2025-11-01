@@ -4,8 +4,41 @@ import { motion } from "framer-motion";
 import { ArrowRight, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { useState } from "react";
+import BounceLoader from "@/components/mvpblocks/bouncing-loader";
+import signIn from "./lib/signin";
 
 export default function GradientHero() {
+  const [clicked, setClicked] = useState<boolean>(false);
+
+  const renderButton = () => {
+    if (!clicked) {
+      return (
+        <Button
+          onClick={async () => {
+            try {
+              setClicked(true);
+              await signIn();
+            } catch (error) {
+              console.error(error);
+              setClicked(false);
+            }
+          }}
+          size="lg"
+          className="group bg-primary text-primary-foreground hover:shadow-primary/30 relative overflow-hidden rounded-full px-6 shadow-lg transition-all duration-300"
+        >
+          <span className="text-white relative z-10 flex items-center">
+            Sign in with your .edu email
+            <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+          </span>
+          <span className="from-primary via-primary/90 to-primary/80 absolute inset-0 z-0 bg-gradient-to-r opacity-0 transition-opacity duration-300 group-hover:opacity-100"></span>
+        </Button>
+      );
+    }
+
+    return <BounceLoader />;
+  };
+
   return (
     <div className="bg-background relative w-full overflow-hidden">
       {/* Background gradient */}
@@ -52,9 +85,9 @@ export default function GradientHero() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-muted-foreground mx-auto mt-6 max-w-2xl text-center text-lg"
           >
-            enQueue helps students line up digitally, making campus life
-            smoother and more efficient—because time in campus should be spent
-            for learning, not waiting.{" "}
+            <span className="font-bold">enQueue</span> helps students line up
+            digitally, making campus life smoother and more efficient—because
+            time in campus should be spent for learning, not waiting.{" "}
           </motion.p>
 
           {/* CTA Buttons */}
@@ -64,16 +97,7 @@ export default function GradientHero() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
           >
-            <Button
-              size="lg"
-              className="group bg-primary text-primary-foreground hover:shadow-primary/30 relative overflow-hidden rounded-full px-6 shadow-lg transition-all duration-300"
-            >
-              <span className="text-white relative z-10 flex items-center">
-                Sign in with your .edu email
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-              </span>
-              <span className="from-primary via-primary/90 to-primary/80 absolute inset-0 z-0 bg-gradient-to-r opacity-0 transition-opacity duration-300 group-hover:opacity-100"></span>
-            </Button>
+            {renderButton()}
           </motion.div>
 
           {/* Feature Image */}
@@ -105,6 +129,7 @@ export default function GradientHero() {
                   alt="dashboard"
                   width={1920}
                   height={1080}
+                  loading="eager"
                 />
                 <div className="from-background absolute inset-0 bg-gradient-to-t to-transparent opacity-0"></div>
               </div>

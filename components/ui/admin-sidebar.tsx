@@ -1,20 +1,15 @@
 "use client";
 
-import React, { memo, useEffect, useState } from "react";
+import { memo, use, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useTheme } from "next-themes";
-
 import {
-  LayoutDashboard,
   Users,
   Activity,
   BarChart3,
   ShieldMinus,
   QrCode,
   Clock,
-  Moon,
-  Sun,
   User2,
   ChevronUp,
 } from "lucide-react";
@@ -38,7 +33,13 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "./dropdown-menu";
+} from "@/components/ui/dropdown-menu";
+
+import { authClient } from "@/app/lib/auth-client";
+
+import ModeToggle from "../theming/ModeToggle";
+import { Avatar, AvatarImage, AvatarFallback } from "./avatar";
+import { Button } from "./button";
 
 const menuItems = [
   { title: "Employees", icon: Users, href: "/employees" },
@@ -48,13 +49,26 @@ const menuItems = [
   { title: "Activity", icon: Activity, href: "/activity-logs" },
   { title: "Analytics", icon: BarChart3, href: "/analytics" },
 ];
+import { useRouter } from "next/navigation";
 
 export const AdminSidebar = memo(() => {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const router = useRouter();
+  const [session, setSession] = useState<any>(null);
 
-  // Prevent hydration mismatch by only rendering theme-dependent UI after mount
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    let active = true;
+    const loadSession = async () => {
+      const { data: session, error } = await authClient.getSession();
+      if (active) setSession(session);
+    };
+
+    loadSession();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  console.log(session);
 
   return (
     <Sidebar collapsible="icon">
@@ -63,13 +77,8 @@ export const AdminSidebar = memo(() => {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link prefetch={false} href="/dashboard">
-                <div className=" flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Image
-                    src={"/neu.png"}
-                    alt="NEU Logo"
-                    width={80}
-                    height={80}
-                  />
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg">
+                  <Image src="/neu.png" alt="NEU Logo" width={80} height={80} />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">enQueue</span>
@@ -107,34 +116,23 @@ export const AdminSidebar = memo(() => {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            >
-              {mounted ? (
-                theme === "dark" ? (
-                  <Sun />
-                ) : (
-                  <Moon />
-                )
-              ) : (
-                // placeholder to maintain layout before mount
-                <div style={{ width: 24, height: 24 }} />
-              )}
-              <span>
-                {mounted
-                  ? theme === "dark"
-                    ? "Light Mode"
-                    : "Dark Mode"
-                  : "Theme"}
-              </span>
-            </SidebarMenuButton>
+            <ModeToggle />
           </SidebarMenuItem>
 
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton>
-                  <User2 /> Username
+                  <Avatar>
+                    {session?.user?.image ? (
+                      <AvatarImage src={session.user.image} />
+                    ) : (
+                      <AvatarFallback>CN</AvatarFallback>
+                    )}
+                  </Avatar>
+
+                  <p>{session?.user?.name ?? "Loading..."}</p>
+
                   <ChevronUp className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
@@ -143,7 +141,22 @@ export const AdminSidebar = memo(() => {
                 className="w-[--radix-popper-anchor-width]"
               >
                 <DropdownMenuItem>
-                  <span>Sign out</span>
+                  <Button
+                    size={"sm"}
+                    variant={"ghost"}
+                    className="w-full"
+                    onClick={async () => {
+                      await authClient.signOut({
+                        fetchOptions: {
+                          onSuccess: () => {
+                            router.push("/");
+                          },
+                        },
+                      });
+                    }}
+                  >
+                    Sign out
+                  </Button>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
