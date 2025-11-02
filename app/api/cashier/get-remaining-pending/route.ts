@@ -5,7 +5,7 @@ import { firestoreDb } from "@/app/lib/backend/firebase-admin";
 // GET - Get count of remaining pending customers at a station
 export const GET = async (req: NextRequest) => {
   // Verify authentication and cashier role
-  const authResult = await verifyAuthAndRole(req, ["cashier"]);
+  const authResult = await verifyAuthAndRole( ["cashier"]);
   if (!authResult.success) {
     return authResult.response;
   }

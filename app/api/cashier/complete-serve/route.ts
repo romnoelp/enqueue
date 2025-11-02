@@ -7,7 +7,7 @@ import { ACTION_TYPES } from "@/types";
 // POST - Complete transaction with customer
 export const POST = async (req: NextRequest) => {
   // Verify authentication and cashier role
-  const authResult = await verifyAuthAndRole(req, ["cashier"]);
+  const authResult = await verifyAuthAndRole( ["cashier"]);
   if (!authResult.success) {
     return authResult.response;
   }
@@ -19,7 +19,15 @@ export const POST = async (req: NextRequest) => {
     );
   }
 
-  const uid = authResult.session.user.id;
+  const uid = authResult.session.user.id || (authResult.session.user as { sub?: string }).sub;
+  
+  if (!uid) {
+    return NextResponse.json(
+      { error: "User ID not found" },
+      { status: 401 }
+    );
+  }
+
   const displayName = authResult.session.user.name || uid;
 
   try {

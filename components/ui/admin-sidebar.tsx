@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, use, useEffect, useState } from "react";
+import { memo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -10,7 +10,6 @@ import {
   ShieldMinus,
   QrCode,
   Clock,
-  User2,
   ChevronUp,
 } from "lucide-react";
 
@@ -35,7 +34,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { authClient } from "@/app/lib/authentication/auth-client";
+import { signOut, useSession } from "next-auth/react";
 import ModeToggle from "../theming/ModeToggle";
 import { Avatar, AvatarImage, AvatarFallback } from "./avatar";
 import { Button } from "./button";
@@ -48,24 +47,8 @@ const menuItems = [
   { title: "Activity", icon: Activity, href: "/activity-logs" },
   { title: "Analytics", icon: BarChart3, href: "/analytics" },
 ];
-import { useRouter } from "next/navigation";
-
 export const AdminSidebar = memo(() => {
-  const router = useRouter();
-  const [session, setSession] = useState<any>(null);
-
-  useEffect(() => {
-    let active = true;
-    const loadSession = async () => {
-      const { data: session, error } = await authClient.getSession();
-      if (active) setSession(session);
-    };
-
-    loadSession();
-    return () => {
-      active = false;
-    };
-  }, []);
+  const { data: session } = useSession();
 
   console.log(session);
 
@@ -145,13 +128,7 @@ export const AdminSidebar = memo(() => {
                     variant={"ghost"}
                     className="w-full"
                     onClick={async () => {
-                      await authClient.signOut({
-                        fetchOptions: {
-                          onSuccess: () => {
-                            router.push("/");
-                          },
-                        },
-                      });
+                      await signOut({ callbackUrl: "/" });
                     }}
                   >
                     Sign out

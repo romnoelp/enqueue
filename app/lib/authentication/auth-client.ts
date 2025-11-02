@@ -1,4 +1,4 @@
-import { createAuthClient } from "better-auth/react";
-export const authClient = createAuthClient({
-  baseURL: "http://localhost:3000",
-});
+// Auth.js doesn't need a separate client for React
+// Use the auth() function from auth.ts in server components
+// Use SessionProvider in client components
+export {};

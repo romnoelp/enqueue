@@ -11,7 +11,7 @@ export const GET = async (
   const { stationID } = await context.params;
 
   // Verify auth and check if user has admin or superAdmin role
-  const authError = await verifyAuthAndRole(req, ["admin", "superAdmin"]);
+  const authError = await verifyAuthAndRole( ["admin", "superAdmin"]);
   if (authError) return authError;
 
   try {

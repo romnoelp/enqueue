@@ -7,7 +7,7 @@ import { sendNotification } from "@/app/lib/utils/sendNotification";
 // POST /api/cashier/notify-customer - Notify customer to proceed to counter
 export const POST = async (req: NextRequest) => {
   // Verify auth and check if user has cashier role
-  const authResult = await verifyAuthAndRole(req, ["cashier"]);
+  const authResult = await verifyAuthAndRole( ["cashier"]);
   if (!authResult.success) {
     return authResult.response;
   }

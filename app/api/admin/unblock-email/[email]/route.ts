@@ -10,7 +10,7 @@ export const DELETE = async (
   { params }: { params: { email: string } }
 ) => {
   // Verify authentication and admin/superAdmin role
-  const authResult = await verifyAuthAndRole(req, ["admin", "superAdmin"]);
+  const authResult = await verifyAuthAndRole( ["admin", "superAdmin"]);
   if (!authResult.success) {
     return authResult.response;
   }
@@ -22,7 +22,15 @@ export const DELETE = async (
     );
   }
 
-  const uid = authResult.session.user.id;
+  const uid = authResult.session.user.id || (authResult.session.user as { sub?: string }).sub;
+  
+  if (!uid) {
+    return NextResponse.json(
+      { error: "User ID not found" },
+      { status: 401 }
+    );
+  }
+
   const displayName = authResult.session.user.name || uid;
 
   try {

@@ -1,20 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
-import { verifyAuthTokenAndDomain, verifyRole } from "@/app/lib/middlewares/auth";
+import { NextResponse } from "next/server";
+import { verifyAuthAndRole } from "@/app/lib/middlewares/auth";
 import { realtimeDb } from "@/app/lib/backend/firebase-admin";
 
 // Get users with pending role status
-export const GET = async (request: NextRequest) => {
+export const GET = async () => {
   try {
-    // Verify authentication
-    const authResult = await verifyAuthTokenAndDomain(request);
+    // Verify authentication and role
+    const authResult = await verifyAuthAndRole(["admin", "superAdmin"]);
     if (!authResult.success) {
       return authResult.response;
-    }
-
-    // Verify role
-    const roleError = verifyRole(authResult.user, ["admin", "superAdmin"]);
-    if (roleError) {
-      return roleError;
     }
 
     // Get all users from Realtime Database

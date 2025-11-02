@@ -37,7 +37,7 @@ export function useAuth() {
         } else {
           setSession(null);
           // Optionally redirect to home if not authenticated
-          // router.push("/");
+          router.push("/");
         }
       } catch (error) {
         console.error("Auth check failed:", error);
@@ -48,7 +48,7 @@ export function useAuth() {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
 
   const signOut = async () => {
     try {

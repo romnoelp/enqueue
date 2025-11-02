@@ -8,7 +8,7 @@ export const GET = async (
   { params }: { params: { uid: string } }
 ) => {
   // Verify authentication and admin/superAdmin role
-  const authResult = await verifyAuthAndRole(req, ["admin", "superAdmin"]);
+  const authResult = await verifyAuthAndRole( ["admin", "superAdmin"]);
   if (!authResult.success) {
     return authResult.response;
   }

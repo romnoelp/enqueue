@@ -9,7 +9,7 @@ import { ZodError } from "zod";
 // POST - Block customer email (add to blacklist)
 export const POST = async (req: NextRequest) => {
   // Verify authentication and admin/superAdmin role
-  const authResult = await verifyAuthAndRole(req, ["admin", "superAdmin"]);
+  const authResult = await verifyAuthAndRole( ["admin", "superAdmin"]);
   if (!authResult.success) {
     return authResult.response;
   }
@@ -21,7 +21,13 @@ export const POST = async (req: NextRequest) => {
     );
   }
 
-  const uid = authResult.session.user.id;
+  const uid = authResult.session.user.id || (authResult.session.user as { sub?: string }).sub;
+  if (!uid) {
+    return NextResponse.json(
+      { error: "User ID not found in session" },
+      { status: 401 }
+    );
+  }
   const displayName = authResult.session.user.name || uid;
 
   try {

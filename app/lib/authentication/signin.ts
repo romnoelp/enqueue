@@ -1,12 +1,10 @@
-import { createAuthClient } from "better-auth/client";
-const authClient = createAuthClient();
+"use client";
+
+import { signIn as authSignIn } from "next-auth/react";
 
 const signIn = async () => {
-  const data = await authClient.signIn.social({
-    provider: "google",
-    callbackURL: "/dashboard",
-    errorCallbackURL: "/error",
-    // newUserCallbackURL: "/welcome",
+  await authSignIn("google", { 
+    callbackUrl: "/dashboard",
   });
 };
 

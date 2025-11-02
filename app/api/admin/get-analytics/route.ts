@@ -11,7 +11,7 @@ type StationAnalytics = {
 // GET - Get system analytics (queue stats by station)
 export const GET = async (req: NextRequest) => {
   // Verify authentication and admin/superAdmin role
-  const authResult = await verifyAuthAndRole(req, ["admin", "superAdmin"]);
+  const authResult = await verifyAuthAndRole( ["admin", "superAdmin"]);
   if (!authResult.success) {
     return authResult.response;
   }

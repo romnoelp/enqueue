@@ -5,7 +5,7 @@ import { realtimeDb } from "@/app/lib/backend/firebase-admin";
 // GET - Get available cashier employees (not assigned to counters)
 export const GET = async (req: NextRequest) => {
   // Verify authentication and admin/superAdmin role
-  const authResult = await verifyAuthAndRole(req, ["admin", "superAdmin"]);
+  const authResult = await verifyAuthAndRole( ["admin", "superAdmin"]);
   if (!authResult.success) {
     return authResult.response;
   }

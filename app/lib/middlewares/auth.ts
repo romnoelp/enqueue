@@ -1,27 +1,24 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { auth } from "../authentication/auth";
 import { AuthUser } from "../../../types";
-import { realtimeDb } from "../backend/firebase-admin";
+import { adminAuth, realtimeDb } from "../backend/firebase-admin";
+import { Session } from "next-auth";
 
 export type AuthMiddlewareResult =
   | { success: true; user: AuthUser }
   | { success: false; response: NextResponse };
 
 export type AuthRoleMiddlewareResult =
-  | { success: true; user: AuthUser; session: Awaited<ReturnType<typeof auth.api.getSession>> }
+  | { success: true; user: AuthUser; session: Session }
   | { success: false; response: NextResponse };
 
 // Verify session and @neu.edu.ph domain, fetch role from Realtime DB
-export const verifyAuthTokenAndDomain = async (
-  request: NextRequest
-): Promise<AuthMiddlewareResult> => {
+export const verifyAuthTokenAndDomain = async (): Promise<AuthMiddlewareResult> => {
   try {
-    // Better Auth getSession expects headers object (not Headers class)
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
+    // Auth.js getSession for API routes
+    const session = await auth();
 
-    if (!session) {
+    if (!session || !session.user) {
       return {
         success: false,
         response: NextResponse.json(
@@ -45,22 +42,40 @@ export const verifyAuthTokenAndDomain = async (
       };
     }
 
-    // Fetch user role from Realtime DB
-    const userRef = realtimeDb.ref(`users/${session.user.id}`);
-    const userSnapshot = await userRef.get();
-    const userData = userSnapshot.val();
-    const userRole = userData?.neuQueueAppRoles?.[0] || userData?.role;
+    try {
+      const firebaseUser = await adminAuth.getUserByEmail(email);
+      const userId = firebaseUser.uid;
 
-    const user: AuthUser = {
-      uid: session.user.id,
-      email: session.user.email,
-      role: userRole,
-      email_verified: session.user.emailVerified,
-      name: session.user.name ?? undefined,
-      picture: session.user.image ?? undefined,
-    };
+      // Fetch user role from Realtime DB
+      const userRef = realtimeDb.ref(`users/${userId}`);
+      const userSnapshot = await userRef.get();
+      const userData = userSnapshot.val();
+      const userRole =
+        (firebaseUser.customClaims?.role as string | undefined) ||
+        userData?.neuQueueAppRoles?.[0] ||
+        userData?.role;
 
-    return { success: true, user };
+      const user: AuthUser = {
+        uid: userId,
+        email: email,
+        role: userRole,
+        email_verified: true, // Auth.js verifies email during OAuth
+        name: session.user.name ?? undefined,
+        picture: session.user.image ?? undefined,
+      };
+
+      return { success: true, user };
+    } catch (firebaseError) {
+      return {
+        success: false,
+        response: NextResponse.json(
+          {
+            message: `Unable to locate user record: ${(firebaseError as Error).message}`,
+          },
+          { status: 401 }
+        ),
+      };
+    }
   } catch (error) {
     const err = error as { message?: string };
     return {
@@ -89,15 +104,13 @@ export const verifyRole = (
 
 // Combined auth + role verification (returns session for additional user info)
 export const verifyAuthAndRole = async (
-  request: NextRequest,
   requiredRoles: string[]
 ): Promise<AuthRoleMiddlewareResult> => {
   try {
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
+    // Auth.js getSession for API routes
+    const session = await auth();
 
-    if (!session) {
+    if (!session || !session.user) {
       return {
         success: false,
         response: NextResponse.json(
@@ -119,33 +132,51 @@ export const verifyAuthAndRole = async (
       };
     }
 
-    // Fetch user role from Realtime DB
-    const userRef = realtimeDb.ref(`users/${session.user.id}`);
-    const userSnapshot = await userRef.get();
-    const userData = userSnapshot.val();
-    const userRole = userData?.neuQueueAppRoles?.[0] || userData?.role;
+    try {
+      const firebaseUser = await adminAuth.getUserByEmail(email);
+      const userId = firebaseUser.uid;
 
-    const user: AuthUser = {
-      uid: session.user.id,
-      email: session.user.email,
-      role: userRole,
-      email_verified: session.user.emailVerified,
-      name: session.user.name ?? undefined,
-      picture: session.user.image ?? undefined,
-    };
+      // Fetch user role from Realtime DB
+      const userRef = realtimeDb.ref(`users/${userId}`);
+      const userSnapshot = await userRef.get();
+      const userData = userSnapshot.val();
+      const userRole =
+        (firebaseUser.customClaims?.role as string | undefined) ||
+        userData?.neuQueueAppRoles?.[0] ||
+        userData?.role;
 
-    // Check role authorization
-    if (!userRole || !requiredRoles.includes(userRole)) {
+      const user: AuthUser = {
+        uid: userId,
+        email: email,
+        role: userRole,
+        email_verified: true, // Auth.js verifies email during OAuth
+        name: session.user.name ?? undefined,
+        picture: session.user.image ?? undefined,
+      };
+
+      // Check role authorization
+      if (!userRole || !requiredRoles.includes(userRole)) {
+        return {
+          success: false,
+          response: NextResponse.json(
+            { message: "Unauthorized request" },
+            { status: 401 }
+          ),
+        };
+      }
+
+      return { success: true, user, session };
+    } catch (firebaseError) {
       return {
         success: false,
         response: NextResponse.json(
-          { message: "Unauthorized request" },
+          {
+            message: `Unable to locate user record: ${(firebaseError as Error).message}`,
+          },
           { status: 401 }
         ),
       };
     }
-
-    return { success: true, user, session };
   } catch (error) {
     const err = error as { message?: string };
     return {

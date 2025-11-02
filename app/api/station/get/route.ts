@@ -6,7 +6,7 @@ import { CashierType } from "@/types";
 // GET - Get all stations
 export const GET = async (req: NextRequest) => {
   // Verify authentication and admin/superAdmin role
-  const authResult = await verifyAuthAndRole(req, ["admin", "superAdmin"]);
+  const authResult = await verifyAuthAndRole( ["admin", "superAdmin"]);
   if (!authResult.success) {
     return authResult.response;
   }

@@ -1,25 +1,38 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { auth } from "./app/lib/authentication/auth";
+import NextAuth from "next-auth";
+import authConfig from "./auth.config";
 
-// Define public routes that don't require authentication
+const { auth } = NextAuth(authConfig);
+
 const publicRoutes = [
   "/",
-  "/api/auth", 
 ];
 
-const apiRoutes = ["/api"];
+const publicPathPrefixes = [
+  "/api/auth", 
+];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow public routes
-  if (publicRoutes.some((route) => pathname === route)) {
+  console.log("[PROXY] Checking path:", pathname);
+
+  // Allow exact public routes
+  if (publicRoutes.includes(pathname)) {
+    console.log("[PROXY] ✅ Allowed (public route):", pathname);
     return NextResponse.next();
   }
 
-  // Allow API routes (they handle their own auth)
-  if (apiRoutes.some((route) => pathname.startsWith(route))) {
+  // Allow routes that start with public path prefixes (e.g., /api/auth/*)
+  if (publicPathPrefixes.some((prefix) => pathname.startsWith(prefix))) {
+    console.log("[PROXY] ✅ Allowed (auth route):", pathname);
+    return NextResponse.next();
+  }
+
+  // Allow other API routes (they handle their own auth)
+  if (pathname.startsWith("/api")) {
+    console.log("[PROXY]: Allowed (API route):", pathname);
     return NextResponse.next();
   }
 
@@ -29,33 +42,41 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/static") ||
     pathname.includes(".")
   ) {
+    console.log("[PROXY]:Allowed (static file):", pathname);
     return NextResponse.next();
   }
 
   // Check authentication for protected routes
+  console.log("[PROXY]: Checking authentication for:", pathname);
+  
   try {
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
+    const session = await auth();
+
+    console.log("[PROXY] Session result:", session ? "Found" : "Not found");
 
     // If no session, redirect to home page
-    if (!session) {
+    if (!session || !session.user) {
+      console.log("[PROXY] ❌ No session - redirecting to /");
       const url = request.nextUrl.clone();
       url.pathname = "/";
       return NextResponse.redirect(url);
     }
+
+    console.log("[PROXY] User email:", session.user.email);
 
     // Verify email domain
     if (!session.user.email?.endsWith("@neu.edu.ph")) {
+      console.log("[PROXY] ❌ Invalid email domain - redirecting to /");
       const url = request.nextUrl.clone();
       url.pathname = "/";
       return NextResponse.redirect(url);
     }
 
+    console.log("[PROXY] ✅ Authentication successful - allowing access");
     // Allow access to protected routes
     return NextResponse.next();
   } catch (error) {
-    console.error("Middleware auth error:", error);
+    console.error("[PROXY] ❌ Auth error:", error);
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);

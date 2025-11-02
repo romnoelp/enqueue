@@ -14,7 +14,7 @@ export const PUT = async (
   const { stationID, counterID } = await context.params;
 
   // Verify auth and check if user has admin or superAdmin role
-  const authResult = await verifyAuthAndRole(req, ["admin", "superAdmin"]);
+  const authResult = await verifyAuthAndRole( ["admin", "superAdmin"]);
   if (!authResult.success) {
     return authResult.response;
   }
@@ -26,7 +26,14 @@ export const PUT = async (
     );
   }
 
-  const uid = authResult.session.user.id;
+  const uid = authResult.session.user.id || (authResult.session.user as { sub?: string }).sub;
+  
+  if (!uid) {
+    return NextResponse.json(
+      { error: "User ID not found" },
+      { status: 401 }
+    );
+  }
 
   if (!counterID || !stationID) {
     return NextResponse.json(

@@ -13,7 +13,7 @@ type Station = {
 // GET - Get cashier employee's assigned station and counter info
 export const GET = async (req: NextRequest) => {
   // Verify authentication and cashier role
-  const authResult = await verifyAuthAndRole(req, ["cashier"]);
+  const authResult = await verifyAuthAndRole( ["cashier"]);
   if (!authResult.success) {
     return authResult.response;
   }

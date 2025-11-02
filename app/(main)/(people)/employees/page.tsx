@@ -1,26 +1,27 @@
 "use client";
 
 import { apiFetch } from "@/app/lib/backend/api";
-import { AuthUser } from "@/types";
+import { Employees } from "@/types";
 import { useEffect, useState } from "react";
 
-interface EmployeesResponse {
-  employees: AuthUser[];
-}
-
-const Employees = () => {
-  const [employees, setEmployees] = useState<EmployeesResponse | null>(null);
-
+const Employee = () => {
+  const [employees, setEmployees] = useState<Employees | null>(null);
+                                
   useEffect(() => {
     const fetchEmployees = async () => {
-      const data = await apiFetch("/admin/employees");
-      setEmployees(data as EmployeesResponse);
+      try {
+  const data = await apiFetch<Employees>("/admin/employees");
+        setEmployees(data);
+      } catch (error) {
+        console.error("Failed to load employees", error);
+        setEmployees(null);
+      }
     };
     fetchEmployees();
   }, []);
   
-  console.log("Emp", employees);
+  console.log(employees);
   return <div>Employees page</div>;
 };
 
-export default Employees;
+export default Employee;

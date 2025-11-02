@@ -7,7 +7,7 @@ import { ACTION_TYPES } from "@/types";
 // POST - Assign role to user
 export const POST = async (req: NextRequest) => {
   // Verify authentication and admin/superAdmin role
-  const authResult = await verifyAuthAndRole(req, ["admin", "superAdmin"]);
+  const authResult = await verifyAuthAndRole( ["admin", "superAdmin"]);
   if (!authResult.success) {
     return authResult.response;
   }
@@ -19,7 +19,13 @@ export const POST = async (req: NextRequest) => {
     );
   }
 
-  const currentUserUid = authResult.session.user.id;
+  const currentUserUid = authResult.session.user.id || (authResult.session.user as { sub?: string }).sub;
+  if (!currentUserUid) {
+    return NextResponse.json(
+      { error: "User ID not found in session" },
+      { status: 401 }
+    );
+  }
   const currentUserName = authResult.session.user.name || currentUserUid;
   const requesterRole = authResult.user.role;
 
