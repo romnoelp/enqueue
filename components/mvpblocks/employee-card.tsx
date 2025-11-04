@@ -1,8 +1,8 @@
-import { Employee } from "@/types/employee";
+import Employee from "@/types/employee";
 
-const MeshyCards = ({ name, role, email }: Employee) => {
+const EmployeeCard = ({ name, role, email }: Employee) => {
   return (
-    <div className="mx-auto my-8 grid w-full max-w-7xl grid-cols-2 gap-6 p-4 lg:grid-cols-4">
+    <div className=" w-full max-w-sm p-4">
       <div
         className="scale-in group visible cursor-pointer"
         style={{ transform: "translateY(0px) scale(1)" }}
@@ -13,6 +13,7 @@ const MeshyCards = ({ name, role, email }: Employee) => {
             background:
               "url(https://images.unsplash.com/photo-1635776062360-af423602aff3?w=800&amp;q=80)",
             backgroundSize: "cover",
+            backgroundPosition: "center",
           }}
         >
           <div className="relative">
@@ -39,8 +40,6 @@ const MeshyCards = ({ name, role, email }: Employee) => {
             </h3>
             <p className="mb-4 font-sans text-sm text-white/80">{role}</p>
             <div className="flex items-center text-white/60">
-              <path d="M16 7h6v6"></path>
-
               <span className="font-sans text-xs">{email}</span>
             </div>
           </div>
@@ -50,4 +49,4 @@ const MeshyCards = ({ name, role, email }: Employee) => {
   );
 };
 
-export default MeshyCards;
+export default EmployeeCard;
