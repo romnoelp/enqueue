@@ -1,5 +1,6 @@
 "use client";
 
+import * as motion from "motion/react-client";
 import { DashboardCard } from "@/components/ui/dashboard-card";
 import { RecentActivity } from "@/components/ui/recent-activity";
 import { RevenueChart } from "@/components/ui/revenue-chart";
@@ -7,6 +8,7 @@ import { SystemStatus } from "@/components/ui/system-status";
 import { UsersTable } from "@/components/ui/users-table";
 import { useState, useEffect } from "react";
 import { Users, Activity, DollarSign, Eye } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
 const Dashboard = () => {
   const stats = [
     {
@@ -64,14 +66,28 @@ const Dashboard = () => {
     console.log("Adding new user...");
   };
 
+  const { data: session } = useSession();
   return (
     <div className="flex flex-1 flex-col gap-2 p-2 pt-0 sm:gap-4 sm:p-4">
       <div className="min-h-[calc(100vh-4rem)] flex-1 rounded-lg p-3 sm:rounded-xl sm:p-4 md:p-6">
         <div className="mx-auto max-w-6xl space-y-4 sm:space-y-6">
           <div className="px-2 sm:px-0">
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-              Welcome Admin
-            </h1>
+            {session ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{
+                  duration: 0.25,
+                  scale: { type: "spring", visualDuration: 0.2, bounce: 0.2 },
+                }}
+              >
+                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                  Welcome Admin {session?.user?.name}!
+                </h1>
+              </motion.div>
+            ) : (
+              <></>
+            )}
             <p className="text-muted-foreground text-sm sm:text-base">
               Here&apos;s what&apos;s happening with your platform today.
             </p>
