@@ -1,46 +1,62 @@
 import Employee from "@/types/employee";
+import { Shield, DollarSign, Info, Clock, Crown } from "lucide-react";
+
+const roleIconMap = {
+  admin: Shield,
+  cashier: DollarSign,
+  information: Info,
+  pending: Clock,
+  superAdmin: Crown,
+};
 
 const EmployeeCard = ({ name, role, email }: Employee) => {
+  const Icon = roleIconMap[role] || Info; // fallback icon
+
   return (
-    <div className=" w-full max-w-sm p-4">
-      <div
-        className="scale-in group visible cursor-pointer"
-        style={{ transform: "translateY(0px) scale(1)" }}
-      >
+    <div className="w-full max-w-sm p-4">
+      <div className="scale-in group visible cursor-pointer">
         <div
-          className="relative transform overflow-hidden rounded-2xl p-6 shadow-lg transition-all duration-300 group-hover:scale-105 hover:shadow-xl"
-          style={{
-            background:
-              "url(https://images.unsplash.com/photo-1635776062360-af423602aff3?w=800&amp;q=80)",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
+          className={`
+            relative transform overflow-hidden rounded-2xl p-6 shadow-md
+            transition-all duration-300 group-hover:scale-[1.03] group-hover:shadow-lg
+            bg-card text-card-foreground border border-border
+          `}
         >
-          <div className="relative">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-white/20">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                data-lucide="code"
-                className="lucide lucide-code h-6 w-6 text-white"
-              >
-                <path d="m16 18 6-6-6-6"></path>
-                <path d="m8 6-6 6 6 6"></path>
-              </svg>
+          {/* Accent bar on top */}
+          <div className="absolute inset-x-0 top-0 h-1 bg-primary"></div>
+
+          <div className="relative space-y-3">
+            {/* Dynamic Icon */}
+            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Icon className="h-5 w-5" />
             </div>
-            <h3 className="mb-2 font-sans text-lg font-medium text-white">
+
+            {/* Text Info */}
+            <h3 className="font-sans text-lg font-semibold leading-tight">
               {name}
             </h3>
-            <p className="mb-4 font-sans text-sm text-white/80">{role}</p>
-            <div className="flex items-center text-white/60">
-              <span className="font-sans text-xs">{email}</span>
+            <p className="text-sm text-muted-foreground capitalize">{role}</p>
+
+            {/* Divider */}
+            <div className="h-px bg-border/50 my-2"></div>
+
+            {/* Email */}
+            <div className="flex items-center text-sm text-muted-foreground">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="mr-2 h-4 w-4 text-primary/70"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 8l9 6 9-6M3 8v8a2 2 0 002 2h14a2 2 0 002-2V8m-9 6L3 8"
+                />
+              </svg>
+              {email}
             </div>
           </div>
         </div>
