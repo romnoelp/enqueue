@@ -98,43 +98,6 @@ export const AdminSidebar = memo(() => {
           <SidebarMenuItem>
             <ModeToggle />
           </SidebarMenuItem>
-
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton>
-                  <Avatar>
-                    {session?.user?.image ? (
-                      <AvatarImage src={session.user.image} />
-                    ) : (
-                      <AvatarFallback>CN</AvatarFallback>
-                    )}
-                  </Avatar>
-
-                  <p>{session?.user?.name ?? "Loading..."}</p>
-
-                  <ChevronUp className="ml-auto" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                side="top"
-                className="w-[--radix-popper-anchor-width]"
-              >
-                <DropdownMenuItem>
-                  <Button
-                    size={"sm"}
-                    variant={"ghost"}
-                    className="w-full"
-                    onClick={async () => {
-                      await signOut({ callbackUrl: "/" });
-                    }}
-                  >
-                    Sign out
-                  </Button>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
 

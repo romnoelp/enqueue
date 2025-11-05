@@ -1,59 +1,53 @@
-'use client';
+"use client";
 
-import { memo } from 'react';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { SidebarTrigger } from '@/components/ui/sidebar';
-import { Separator } from '@/components/ui/separator';
+import { memo } from "react";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+} from "@/components/ui/breadcrumb";
 import {
   Bell,
-  Search,
   Filter,
   Download,
   RefreshCw,
   MoreHorizontal,
-} from 'lucide-react';
+} from "lucide-react";
+import { Avatar } from "./avatar";
+import { AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
+import { signOut, useSession } from "next-auth/react";
 
 interface DashboardHeaderProps {
-  searchQuery: string;
-  onSearchChange: (value: string) => void;
   onRefresh: () => void;
   onExport: () => void;
   isRefreshing: boolean;
 }
 
 export const DashboardHeader = memo(
-  ({
-    searchQuery,
-    onSearchChange,
-    onRefresh,
-    onExport,
-    isRefreshing,
-  }: DashboardHeaderProps) => {
+  ({ onRefresh, onExport, isRefreshing }: DashboardHeaderProps) => {
+    const { data: session } = useSession();
+
     return (
-      <header className="bg-background/95 sticky top-0 z-50 flex h-16 w-full shrink-0 items-center gap-2 border-b backdrop-blur transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+      <header className="bg-background/95 sticky top-0 z-50 flex h-16 w-full shrink-0 items-center gap-2 border-b backdrop-blur transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="#">Home</BreadcrumbLink>
+                <BreadcrumbLink href="/dashboard">Home</BreadcrumbLink>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -65,24 +59,8 @@ export const DashboardHeader = memo(
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-2"
           >
-            {/* Search Input - Hide on Mobile */}
-            <div className="relative hidden md:block">
-              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
-              <Input
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="w-64 pl-10"
-              />
-            </div>
-
             {/* Desktop Actions */}
             <div className="hidden items-center gap-2 md:flex">
-              <Button variant="outline" size="sm">
-                <Filter className="mr-2 h-4 w-4" />
-                Filter
-              </Button>
-
               <Button variant="outline" size="sm" onClick={onExport}>
                 <Download className="mr-2 h-4 w-4" />
                 Export
@@ -95,12 +73,11 @@ export const DashboardHeader = memo(
                 disabled={isRefreshing}
               >
                 <RefreshCw
-                  className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                  className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
                 />
                 Refresh
               </Button>
             </div>
-
             {/* Mobile Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild className="md:hidden">
@@ -109,10 +86,6 @@ export const DashboardHeader = memo(
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => onSearchChange('')}>
-                  <Search className="mr-2 h-4 w-4" />
-                  Search
-                </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Filter className="mr-2 h-4 w-4" />
                   Filter
@@ -127,10 +100,34 @@ export const DashboardHeader = memo(
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-
             <Button variant="outline" size="sm">
               <Bell className="h-4 w-4" />
             </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Avatar className="rounded-md">
+                  <AvatarImage src={session?.user?.image?.toString()} />
+                  <AvatarFallback>CN</AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem>
+                  <p className="font-base text-sm">{session?.user?.name}</p>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <p className="font-base text-xs">{session?.user?.email}</p>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={async () => {
+                    await signOut({ callbackUrl: "/" });
+                  }}
+                >
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </motion.div>
         </div>
       </header>
@@ -138,4 +135,4 @@ export const DashboardHeader = memo(
   },
 );
 
-DashboardHeader.displayName = 'DashboardHeader';
+DashboardHeader.displayName = "DashboardHeader";
