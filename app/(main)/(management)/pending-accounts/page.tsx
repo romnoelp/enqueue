@@ -73,7 +73,7 @@ const PendingAccounts = () => {
       await acceptPendingUser(selectedUser.uid, selectedRole);
       setPending((prev) => removePendingUser(prev, selectedUser));
       toast.success(
-        `${selectedUser.name} accepted as ${getRoleLabel(selectedRole)}.`,
+        `${selectedUser.name} accepted as ${getRoleLabel(selectedRole)}.`
       );
       closeAssignDialog();
     } catch (err) {
@@ -160,7 +160,11 @@ const PendingAccounts = () => {
                 key={user.uid ?? user.email}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.02 * index, type: "spring", stiffness: 70 }}
+                transition={{
+                  delay: 0.02 * index,
+                  type: "spring",
+                  stiffness: 70,
+                }}
               >
                 <PendingEmployeeCard
                   name={user.name}
@@ -177,7 +181,9 @@ const PendingAccounts = () => {
 
       <AssignRoleDialog
         open={!!selectedUser}
-        userDisplay={selectedUser ? selectedUser.name || selectedUser.email : ""}
+        userDisplay={
+          selectedUser ? selectedUser.name || selectedUser.email : ""
+        }
         selectedRole={selectedRole}
         onSelectedRoleChange={setSelectedRole}
         onClose={closeAssignDialog}

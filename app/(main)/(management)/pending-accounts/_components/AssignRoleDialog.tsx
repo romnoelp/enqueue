@@ -78,7 +78,11 @@ export default function AssignRoleDialog({
         </div>
 
         <DialogFooter>
-          <Button onClick={onConfirm} disabled={disabled} aria-disabled={disabled}>
+          <Button
+            onClick={onConfirm}
+            disabled={disabled}
+            aria-disabled={disabled}
+          >
             {isSaving ? "Saving..." : "Confirm"}
           </Button>
         </DialogFooter>

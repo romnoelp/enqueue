@@ -1,62 +1,43 @@
 import { NextResponse } from "next/server";
 import { verifyAuthAndRole } from "@/app/lib/middlewares/auth";
-import { realtimeDb } from "@/app/lib/backend/firebase-admin";
+import { adminAuth } from "@/app/lib/backend/firebase-admin";
+import type { UserRecord } from "firebase-admin/auth";
+
+const listAllUsers = async () => {
+  const users: UserRecord[] = [];
+  let nextPageToken: string | undefined;
+
+  do {
+    const result = await adminAuth.listUsers(1000, nextPageToken);
+    users.push(...result.users);
+    nextPageToken = result.pageToken ?? undefined;
+  } while (nextPageToken);
+
+  return users;
+};
 
 // Get users with pending role status
 export const GET = async () => {
   try {
-    // Verify authentication and role
     const authResult = await verifyAuthAndRole(["admin", "superAdmin"]);
     if (!authResult.success) {
       return authResult.response;
     }
 
-    // Get all users from Realtime Database
-    const usersRef = realtimeDb.ref("users");
-    const usersSnapshot = await usersRef
-      .orderByChild("role")
-      .equalTo("pending")
-      .get();
+    const users = await listAllUsers();
 
-    const pendingUsers: Array<{
-      uid: string;
-      email?: string;
-      name?: string;
-      role?: string;
-      createdAt?: number;
-    }> = [];
-
-    usersSnapshot.forEach(
-      (childSnapshot: {
-        key: string | null;
-        val: () => {
-          email?: string;
-          name?: string;
-          role?: string;
-          createdAt?: number;
-        };
-      }) => {
-        const uid = childSnapshot.key;
-        const userData = childSnapshot.val() as {
-          email?: string;
-          name?: string;
-          role?: string;
-          createdAt?: number;
-        };
-
-        // Skip if invalid uid or self
-        if (!uid) return;
-        if (uid === authResult.user.uid) return;
-
-        pendingUsers.push({
-          uid,
-          email: userData.email,
-          name: userData.name,
-          role: userData.role,
-          createdAt: userData.createdAt,
-        });
-      }
-    );
+    const pendingUsers = users
+      .filter((user) => user.customClaims?.role === "pending")
+      .filter((user) => user.uid !== authResult.user.uid)
+      .map((user) => ({
+        uid: user.uid,
+        email: user.email ?? undefined,
+        name: user.displayName ?? undefined,
+        role: user.customClaims?.role ?? undefined,
+        createdAt: user.metadata.creationTime
+          ? new Date(user.metadata.creationTime).getTime()
+          : undefined,
+      }));
 
     return NextResponse.json({ pendingUsers }, { status: 200 });
   } catch (error) {
