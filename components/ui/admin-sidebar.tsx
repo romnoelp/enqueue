@@ -27,17 +27,8 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
 import { signOut, useSession } from "next-auth/react";
 import ModeToggle from "../theming/ModeToggle";
-import { Avatar, AvatarImage, AvatarFallback } from "./avatar";
-import { Button } from "./button";
 
 const menuItems = [
   { title: "Employees", icon: Users, href: "/employees" },
