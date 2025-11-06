@@ -5,7 +5,6 @@ import { getRoleLabel } from "../_utils/role";
 import ROLE_ICONS from "../_utils/icons";
 import type { UserRole } from "@/types/auth";
 import { Info } from "lucide-react";
-import React from "react";
 
 interface RoleOptionButtonProps {
   role: UserRole | string;

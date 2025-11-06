@@ -14,9 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import BounceLoader from "@/components/mvpblocks/bouncing-loader";
 import { SELECTABLE_ROLES, getRoleLabel } from "../_utils/role";
-// Icons are handled inside RoleOptionButton
 import RoleOptionButton from "./RoleOptionButton";
-import React from "react";
 
 type ChangeRoleDialogProps = {
   open: boolean;
@@ -61,7 +59,7 @@ const ChangeRoleDialog = ({
         </DialogHeader>
 
         <div className="space-y-3">
-          <div className="flex w-full items-center gap-2 overflow-x-auto">
+          <div className="flex justify-between w-full items-center gap-2 overflow-x-auto">
             {SELECTABLE_ROLES.filter((role) => role !== employee?.role).map(
               (role) => {
                 const isSelected = selectedRole === role;
