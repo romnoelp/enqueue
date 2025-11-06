@@ -2,7 +2,6 @@
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "next-themes";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,11 +32,8 @@ const Actions = ({
   totalCount,
   filteredCount,
 }: ActionsProps) => {
-  const { theme, resolvedTheme } = useTheme();
-  const current = theme === "system" ? resolvedTheme : theme;
   const [inputValue, setInputValue] = useState(searchQuery);
-  
-  // Debounced search callback - waits 300ms after user stops typing
+
   const debouncedSearch = useDebouncedCallback((value: string) => {
     onSearchChange(value);
   }, 300);
@@ -48,8 +44,7 @@ const Actions = ({
   };
 
   const handleSearch = () => {
-    // Immediately trigger search (bypass debounce)
-    debouncedSearch.cancel(); // Cancel any pending debounced calls
+    debouncedSearch.cancel();
     onSearchChange(inputValue);
   };
 
@@ -61,7 +56,7 @@ const Actions = ({
 
   const handleClearSearch = () => {
     setInputValue("");
-    debouncedSearch.cancel(); // Cancel pending debounce
+    debouncedSearch.cancel();
     onSearchChange("");
   };
 
@@ -100,9 +95,7 @@ const Actions = ({
           </div>
           <Button variant="outline" onClick={handleSearch}>
             <Search />
-            <span className={current === "dark" ? "text-white" : "text-black"}>
-              Search
-            </span>
+            <span>Search</span>
           </Button>
         </div>
         <DropdownMenu>
@@ -135,9 +128,7 @@ const Actions = ({
                 Cashier
               </span>
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => onRoleFilterChange("information")}
-            >
+            <DropdownMenuItem onClick={() => onRoleFilterChange("information")}>
               <span className={roleFilter === "information" ? "font-bold" : ""}>
                 Information
               </span>
@@ -154,9 +145,7 @@ const Actions = ({
         <div className="text-sm text-gray-600 dark:text-gray-400">
           Showing {filteredCount} of {totalCount} employees
           {searchQuery && (
-            <span className="ml-1">
-              matching &quot;{searchQuery}&quot;
-            </span>
+            <span className="ml-1">matching &quot;{searchQuery}&quot;</span>
           )}
         </div>
       )}

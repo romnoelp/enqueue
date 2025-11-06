@@ -11,6 +11,14 @@ import type Employee from "@/types/employee";
 import { UserRole } from "@/types/auth";
 import Actions from "./_components/Actions";
 import { searchAndFilterEmployees } from "@/lib/employee-utils";
+import {
+  setEmployeeRole,
+  getRoleLabel,
+} from "@/app/(main)/(people)/employees/_utils/role";
+import { normalizeEmployeesResponse } from "@/app/(main)/(people)/employees/_utils/data";
+import ChangeRoleDialog from "./_components/ChangeRoleDialog";
+import { toast } from "sonner";
+import updateEmployeeRoleInList from "@/app/(main)/(people)/employees/_utils/employee-list";
 
 const Employee = () => {
   const { data: session } = useSession();
@@ -18,21 +26,18 @@ const Employee = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
+    null
+  );
+  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const data = await apiFetch<{ employees: Employee[] } | Employee[]>("/admin/employees");
-        console.log("Fetched employees:", data); // Debug log
-        
-        // Handle both response formats
-        if (Array.isArray(data)) {
-          setEmployees(data);
-        } else if (data && typeof data === 'object' && 'employees' in data) {
-          setEmployees(data.employees);
-        } else {
-          setEmployees([]);
-        }
+        const data = await apiFetch("/admin/employees");
+        setEmployees(normalizeEmployeesResponse(data));
       } catch (error) {
         console.error("Failed to load employees", error);
         setEmployees([]);
@@ -43,10 +48,63 @@ const Employee = () => {
     fetchEmployees();
   }, []);
 
-  // Filter employees based on search and role filter
   const filteredEmployees = useMemo(() => {
     return searchAndFilterEmployees(employees, searchQuery, roleFilter);
   }, [employees, searchQuery, roleFilter]);
+
+  const openRoleDialog = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setSelectedRole(null);
+    setErrorMessage(null);
+  };
+
+  const closeRoleDialog = () => {
+    setSelectedEmployee(null);
+    setSelectedRole(null);
+    setIsSaving(false);
+    setErrorMessage(null);
+  };
+
+  const handleSaveRole = async () => {
+    if (!selectedEmployee?.uid) {
+      closeRoleDialog();
+      return;
+    }
+    if (!selectedRole || selectedRole === selectedEmployee.role) {
+      closeRoleDialog();
+      return;
+    }
+    try {
+      setIsSaving(true);
+      setErrorMessage(null);
+      await setEmployeeRole(selectedEmployee.uid, selectedRole);
+
+      setEmployees((prevEmployees) =>
+        updateEmployeeRoleInList(
+          prevEmployees,
+          selectedEmployee.uid!,
+          selectedRole
+        )
+      );
+      toast.success(
+        `${selectedEmployee.name}'s role changed to ${getRoleLabel(
+          selectedRole
+        )}`
+      );
+      closeRoleDialog();
+    } catch (error) {
+      const message =
+        typeof error === "string"
+          ? error
+          : error instanceof Error
+          ? error.message
+          : "Failed to update role";
+      setErrorMessage(message);
+      toast.error(message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   if (!session) {
     return (
@@ -93,9 +151,12 @@ const Employee = () => {
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredEmployees.map((emp, index) => (
-              <motion.div
-                key={emp.uid}
+            {filteredEmployees.map((employee, index) => (
+              <motion.button
+                key={employee.uid ?? employee.email}
+                type="button"
+                onClick={() => openRoleDialog(employee)}
+                className="text-left"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{
@@ -105,15 +166,26 @@ const Employee = () => {
                 }}
               >
                 <EmployeeCard
-                  name={emp.name}
-                  email={emp.email}
-                  role={emp.role}
+                  name={employee.name}
+                  email={employee.email}
+                  role={employee.role}
                 />
-              </motion.div>
+              </motion.button>
             ))}
           </div>
         </ScrollArea>
       </div>
+
+      <ChangeRoleDialog
+        open={!!selectedEmployee}
+        employee={selectedEmployee}
+        selectedRole={selectedRole}
+        onSelectedRoleChange={(newRole) => setSelectedRole(newRole)}
+        onClose={closeRoleDialog}
+        onSave={handleSaveRole}
+        isSaving={isSaving}
+        errorMessage={errorMessage}
+      />
     </div>
   );
 };
