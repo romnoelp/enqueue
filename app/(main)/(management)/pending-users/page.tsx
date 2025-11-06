@@ -148,7 +148,7 @@ const PendingAccounts = () => {
               transition={{ duration: 0.3 }}
             >
               <p className="text-gray-500 dark:text-gray-400">
-                No pending accounts found.
+                No pending users found.
               </p>
             </motion.div>
           )}
