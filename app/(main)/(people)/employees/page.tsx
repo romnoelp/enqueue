@@ -125,55 +125,58 @@ const Employee = () => {
           totalCount={employees.length}
           filteredCount={filteredEmployees.length}
         />
-        <ScrollArea className="flex-1 mt-4">
-          {isLoading && (
-            <motion.div
-              className="absolute inset-0 flex justify-center items-center"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, type: "spring", stiffness: 70 }}
-            >
-              <BounceLoader />
-            </motion.div>
-          )}
 
-          {!isLoading && filteredEmployees.length === 0 && (
-            <motion.div
-              className="flex justify-center items-center h-64"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <p className="text-gray-500 dark:text-gray-400">
-                No employees found matching your criteria.
-              </p>
-            </motion.div>
-          )}
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredEmployees.map((employee, index) => (
-              <motion.button
-                key={employee.uid ?? employee.email}
-                type="button"
-                onClick={() => openRoleDialog(employee)}
-                className="text-left"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  delay: 0.02 * index,
-                  type: "spring",
-                  stiffness: 70,
-                }}
+        {isLoading ? (
+          <motion.div
+            className="flex-1 flex justify-center items-center"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, type: "spring", stiffness: 70 }}
+          >
+            <BounceLoader />
+          </motion.div>
+        ) : (
+          <ScrollArea className="h-full flex-1 mt-4">
+            {filteredEmployees.length === 0 && (
+              <motion.div
+                className="flex justify-center items-center h-64"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
               >
-                <EmployeeCard
-                  name={employee.name}
-                  email={employee.email}
-                  role={employee.role}
-                />
-              </motion.button>
-            ))}
-          </div>
-        </ScrollArea>
+                <p className="text-gray-500 dark:text-gray-400">
+                  No employees found matching your criteria.
+                </p>
+              </motion.div>
+            )}
+
+            {filteredEmployees.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {filteredEmployees.map((employee, index) => (
+                  <motion.button
+                    key={employee.uid ?? employee.email}
+                    type="button"
+                    onClick={() => openRoleDialog(employee)}
+                    className="text-left"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      delay: 0.02 * index,
+                      type: "spring",
+                      stiffness: 70,
+                    }}
+                  >
+                    <EmployeeCard
+                      name={employee.name}
+                      email={employee.email}
+                      role={employee.role}
+                    />
+                  </motion.button>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        )}
       </div>
 
       <ChangeRoleDialog

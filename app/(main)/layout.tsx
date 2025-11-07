@@ -24,9 +24,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
             onExport={handleExport}
             isRefreshing={false}
           />
-          <div style={{ viewTransitionName: 'main-content' }}>
-            {children}
-          </div>
+          {children}
         </SidebarInset>
       </SidebarProvider>
     </>
