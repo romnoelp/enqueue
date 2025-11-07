@@ -8,7 +8,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/animate-ui/components/radix/dialog";
 import {
   Select,
   SelectContent,
@@ -44,7 +44,11 @@ export default function AssignRoleDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => (!next ? onClose() : null)}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent 
+        className="sm:max-w-md" 
+        from="bottom"
+        transition={{ type: 'spring', stiffness: 400, damping: 30, duration: 0.2 }}
+      >
         <DialogHeader>
           <DialogTitle>Assign role</DialogTitle>
           <DialogDescription>

@@ -11,7 +11,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/animate-ui/components/radix/dialog";
 import BounceLoader from "@/components/mvpblocks/bouncing-loader";
 import { SELECTABLE_ROLES, getRoleLabel } from "../_utils/role";
 import RoleOptionButton from "./RoleOptionButton";
@@ -50,7 +50,11 @@ const ChangeRoleDialog = ({
       open={open}
       onOpenChange={(nextOpen) => (!nextOpen ? onClose() : null)}
     >
-      <DialogContent className="sm:max-w-md">
+      <DialogContent 
+        className="sm:max-w-md" 
+        from="bottom"
+        transition={{ type: 'spring', stiffness: 400, damping: 30, duration: 0.2 }}
+      >
         <DialogHeader>
           <DialogTitle>Change employee role</DialogTitle>
           <DialogDescription>

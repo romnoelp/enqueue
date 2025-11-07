@@ -8,7 +8,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/animate-ui/components/radix/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -49,7 +49,11 @@ export default function AddBlacklistDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => (!next ? handleClose() : null)}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent 
+        className="sm:max-w-md" 
+        from="bottom"
+        transition={{ type: 'spring', stiffness: 400, damping: 30, duration: 0.2 }}
+      >
         <DialogHeader>
           <DialogTitle>Blacklist a user</DialogTitle>
           <DialogDescription>
