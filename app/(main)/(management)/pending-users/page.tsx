@@ -56,7 +56,7 @@ const useAssignRoleDialog = () => {
   };
 };
 
-const PendingAccounts = () => {
+const PendingUsers = () => {
   const { data: session } = useSession();
   const [pending, setPending] = useState<Employee[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -197,4 +197,4 @@ const PendingAccounts = () => {
   );
 };
 
-export default PendingAccounts;
+export default PendingUsers;

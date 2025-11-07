@@ -31,7 +31,7 @@ import ModeToggle from "../theming/ModeToggle";
 const menuItems = [
   { title: "Employees", icon: Users, href: "/employees" },
   { title: "Stations", icon: QrCode, href: "/stations" },
-  { title: "Pending Users", icon: Clock, href: "/pending-accounts" },
+  { title: "Pending Users", icon: Clock, href: "/pending-users" },
   { title: "Blacklisted", icon: ShieldMinus, href: "/blacklisted" },
   { title: "Activity", icon: Activity, href: "/activity-logs" },
   { title: "Analytics", icon: BarChart3, href: "/analytics" },

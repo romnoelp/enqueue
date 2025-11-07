@@ -77,7 +77,7 @@ const Actions = ({
       </div>
       {Boolean(searchQuery) && (
         <div className="text-sm text-gray-600 dark:text-gray-400">
-          Showing {filteredCount} of {totalCount} accounts
+          Showing {filteredCount} of {totalCount} pending users
           {searchQuery && (
             <span className="ml-1">matching &quot;{searchQuery}&quot;</span>
           )}
