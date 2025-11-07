@@ -49,10 +49,15 @@ export default function AddBlacklistDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => (!next ? handleClose() : null)}>
-      <DialogContent 
-        className="sm:max-w-md" 
+      <DialogContent
+        className="sm:max-w-md"
         from="bottom"
-        transition={{ type: 'spring', stiffness: 400, damping: 30, duration: 0.2 }}
+        transition={{
+          type: "spring",
+          stiffness: 400,
+          damping: 30,
+          duration: 0.2,
+        }}
       >
         <DialogHeader>
           <DialogTitle>Blacklist a user</DialogTitle>
