@@ -1,10 +1,8 @@
 import type Employee from "@/types/employee";
 import { UserRole } from "@/types/auth";
 
-/**
- * Filter employees by search query (name or email)
- */
-export const searchEmployees = (
+// Search employees by name or email
+const searchEmployees = (
   employees: Employee[],
   query: string
 ): Employee[] => {
@@ -21,10 +19,8 @@ export const searchEmployees = (
   );
 };
 
-/**
- * Filter employees by role
- */
-export const filterEmployeesByRole = (
+// Filter employees by role
+const filterEmployeesByRole = (
   employees: Employee[],
   role: UserRole | "all"
 ): Employee[] => {
@@ -35,21 +31,20 @@ export const filterEmployeesByRole = (
   return employees.filter((employee) => employee.role === role);
 };
 
-/**
- * Combined search and filter for employees
- */
-export const searchAndFilterEmployees = (
+// Search and filter employees
+const searchAndFilterEmployees = (
   employees: Employee[],
   searchQuery: string,
   roleFilter: UserRole | "all"
 ): Employee[] => {
   let result = employees;
 
-  // Apply role filter first
   result = filterEmployeesByRole(result, roleFilter);
-
-  // Then apply search
   result = searchEmployees(result, searchQuery);
 
   return result;
 };
+
+export { searchEmployees, filterEmployeesByRole, searchAndFilterEmployees };
+
+

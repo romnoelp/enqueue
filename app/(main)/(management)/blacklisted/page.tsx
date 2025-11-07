@@ -1,5 +1,168 @@
+"use client";
+
+import BounceLoader from "@/components/mvpblocks/bouncing-loader";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import * as motion from "motion/react-client";
+import { useSession } from "next-auth/react";
+import { useMemo } from "react";
+import BlacklistedUserCard from "@/components/mvpblocks/blacklisted-user-card";
+import type { Blacklist } from "@/types/blacklist";
+import Actions from "./_components/Actions";
+import { searchBlacklistedUsers } from "./_utils/list";
+import { toast } from "sonner";
+import RemoveBlacklistDialog from "./_components/RemoveBlacklistDialog";
+import AddBlacklistDialog from "./_components/AddBlacklistDialog";
+import { unblockEmail, blockEmail } from "./_utils/mutations";
+import { useDialog } from "@/hooks/use-dialog";
+import { getErrorMessage } from "@/lib/error-utils";
+import { useBlacklistedUsers } from "./_hooks/use-blacklisted-users";
+import { useState } from "react";
+
 const Blacklisted = () => {
-  return <div>Blacklisted</div>;
+  const { data: session } = useSession();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const { blacklisted, isLoading, addUser, removeUser } = useBlacklistedUsers();
+  const removeDialog = useDialog<Blacklist | null>(null);
+  const addDialog = useDialog<boolean>(false);
+
+  const filtered = useMemo(() => {
+    return searchBlacklistedUsers(blacklisted, searchQuery);
+  }, [blacklisted, searchQuery]);
+
+  const confirmRemove = async () => {
+    const selectedUser = removeDialog.data;
+
+    if (!selectedUser?.email) {
+      removeDialog.close();
+      return;
+    }
+
+    try {
+      removeDialog.setIsSaving(true);
+      removeDialog.resetError();
+      await unblockEmail(selectedUser.email);
+      removeUser(selectedUser);
+      toast.success(`${selectedUser.email} removed from blacklist.`);
+      removeDialog.close();
+    } catch (error) {
+      const message = getErrorMessage(error);
+      removeDialog.setErrorMessage(message);
+      toast.error(message);
+    } finally {
+      removeDialog.setIsSaving(false);
+    }
+  };
+
+  const confirmAdd = async (email: string, reason: string) => {
+    try {
+      addDialog.setIsSaving(true);
+      addDialog.resetError();
+      await blockEmail(email, reason);
+
+      const newUser: Blacklist = { email, reason };
+      addUser(newUser);
+
+      toast.success(`${email} has been blacklisted.`);
+      addDialog.close();
+    } catch (error) {
+      const message = getErrorMessage(error);
+      addDialog.setErrorMessage(message);
+      toast.error(message);
+    } finally {
+      addDialog.setIsSaving(false);
+    }
+  };
+
+  if (!session) {
+    return (
+      <div className="h-full flex justify-center items-center">
+        <BounceLoader />
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col">
+      <div className="h-full flex flex-col p-4">
+        <Actions
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          totalCount={blacklisted.length}
+          filteredCount={filtered.length}
+          onAddBlacklist={() => addDialog.open(true)}
+        />
+
+        <ScrollArea className="flex-1 mt-4">
+          {isLoading && (
+            <motion.div
+              className="absolute inset-0 flex justify-center items-center"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, type: "spring", stiffness: 70 }}
+            >
+              <BounceLoader />
+            </motion.div>
+          )}
+
+          {!isLoading && filtered.length === 0 && (
+            <motion.div
+              className="flex justify-center items-center h-64"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <p className="text-gray-500 dark:text-gray-400">
+                No blacklisted users found.
+              </p>
+            </motion.div>
+          )}
+
+          {filtered.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {filtered.map((user, index) => (
+                <motion.div
+                  className="text-left"
+                  key={user.email}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: 0.02 * index,
+                    type: "spring",
+                    stiffness: 70,
+                  }}
+                >
+                  <BlacklistedUserCard
+                    email={user.email}
+                    reason={user.reason}
+                    onRemove={() => removeDialog.open(user)}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </ScrollArea>
+      </div>
+
+      <RemoveBlacklistDialog
+        open={!!removeDialog.data}
+        userEmail={removeDialog.data?.email ?? ""}
+        reason={removeDialog.data?.reason ?? ""}
+        onClose={removeDialog.close}
+        onConfirm={confirmRemove}
+        isSaving={removeDialog.isSaving}
+        errorMessage={removeDialog.errorMessage}
+      />
+
+      <AddBlacklistDialog
+        open={addDialog.isOpen}
+        onClose={addDialog.close}
+        onConfirm={confirmAdd}
+        isSaving={addDialog.isSaving}
+        errorMessage={addDialog.errorMessage}
+      />
+    </div>
+  );
 };
 
 export default Blacklisted;

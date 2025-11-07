@@ -1,15 +1,20 @@
 import type Employee from "@/types/employee";
 
-export const removePendingUser = (list: Employee[], target: Employee): Employee[] => {
-  const { uid, email } = target;
+// Remove user from pending list by uid or email
+const removePendingUser = (pendingUsers: Employee[], targetUser: Employee): Employee[] => {
+  const { uid, email } = targetUser;
 
-  return list.filter((user) => {
+  return pendingUsers.filter((user) => {
     if (uid && user.uid) {
       return user.uid !== uid;
     }
     if (email) {
       return user.email !== email;
     }
-    return user !== target;
+    return user !== targetUser;
   });
 };
+
+export { removePendingUser };
+
+

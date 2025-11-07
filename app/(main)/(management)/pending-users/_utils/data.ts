@@ -1,6 +1,6 @@
 import type Employee from "@/types/employee";
 
-export type RawPendingUser = {
+type RawPendingUser = {
   uid: string;
   email?: string;
   name?: string;
@@ -8,21 +8,27 @@ export type RawPendingUser = {
   createdAt?: number;
 };
 
-export const normalizePendingUsersResponse = (data: unknown): Employee[] => {
+// Normalize API response to Employee array
+const normalizePendingUsersResponse = (apiResponse: unknown): Employee[] => {
   const users =
-    data && typeof data === "object" && "pendingUsers" in (data as Record<string, unknown>)
-      ? ((data as { pendingUsers?: unknown }).pendingUsers as unknown[] | undefined) ?? []
-      : Array.isArray(data)
-      ? (data as unknown[])
+    apiResponse && typeof apiResponse === "object" && "pendingUsers" in (apiResponse as Record<string, unknown>)
+      ? ((apiResponse as { pendingUsers?: unknown }).pendingUsers as unknown[] | undefined) ?? []
+      : Array.isArray(apiResponse)
+      ? (apiResponse as unknown[])
       : [];
 
   return users
-    .filter((u): u is RawPendingUser => !!u && typeof u === "object")
-    .map((u) => u as RawPendingUser)
-    .map((u): Employee => ({
-      uid: u.uid,
-      name: u.name ?? u.email?.split("@")[0] ?? "Unknown",
-      email: u.email ?? "unknown@example.com",
-      role: (u.role as Employee["role"]) ?? "pending",
+    .filter((user): user is RawPendingUser => !!user && typeof user === "object")
+    .map((user) => user as RawPendingUser)
+    .map((user): Employee => ({
+      uid: user.uid,
+      name: user.name ?? user.email?.split("@")[0] ?? "Unknown",
+      email: user.email ?? "unknown@example.com",
+      role: (user.role as Employee["role"]) ?? "pending",
     }));
 };
+
+export { normalizePendingUsersResponse };
+
+export type { RawPendingUser };
+

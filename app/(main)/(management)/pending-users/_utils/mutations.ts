@@ -4,12 +4,18 @@ import type { UserRole } from "@/types/auth";
 
 const REJECT_REASON = "Rejected by admin";
 
-export const acceptPendingUser = (uid: string, role: UserRole) =>
-  setEmployeeRole(uid, role);
+// Accept pending user and assign role
+const acceptPendingUser = (userId: string, role: UserRole) =>
+  setEmployeeRole(userId, role);
 
-export const rejectPendingUser = (email: string) =>
+// Reject pending user and add to blacklist
+const rejectPendingUser = (email: string) =>
   apiFetch("/admin/block-email", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, reason: REJECT_REASON }),
   });
+
+export { acceptPendingUser, rejectPendingUser };
+
+

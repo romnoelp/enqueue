@@ -17,15 +17,9 @@ import AssignRoleDialog from "./_components/AssignRoleDialog";
 import { DEFAULT_ACCEPT_ROLE, getRoleLabel } from "./_utils/role";
 import { acceptPendingUser } from "./_utils/mutations";
 import { removePendingUser } from "./_utils/list";
+import { getErrorMessage } from "@/lib/error-utils";
 
-// Utility to extract error message
-const getErrorMessage = (err: unknown): string => {
-  if (typeof err === "string") return err;
-  if (err instanceof Error) return err.message;
-  return "An unexpected error occurred";
-};
-
-// Custom hook for dialog state management
+// Dialog state for role assignment
 const useAssignRoleDialog = () => {
   const [selectedUser, setSelectedUser] = useState<Employee | null>(null);
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
@@ -106,8 +100,8 @@ const PendingAccounts = () => {
         `${selectedUser.name} accepted as ${getRoleLabel(selectedRole)}.`
       );
       dialog.close();
-    } catch (err) {
-      const message = getErrorMessage(err);
+    } catch (error) {
+      const message = getErrorMessage(error);
       dialog.setErrorMessage(message);
       toast.error(message);
     } finally {
