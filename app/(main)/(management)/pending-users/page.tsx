@@ -15,8 +15,52 @@ import type { UserRole } from "@/types/auth";
 import { toast } from "sonner";
 import AssignRoleDialog from "./_components/AssignRoleDialog";
 import { DEFAULT_ACCEPT_ROLE, getRoleLabel } from "./_utils/role";
-import { acceptPendingUser, rejectPendingUser } from "./_utils/mutations";
+import { acceptPendingUser } from "./_utils/mutations";
 import { removePendingUser } from "./_utils/list";
+
+// Utility to extract error message
+const getErrorMessage = (err: unknown): string => {
+  if (typeof err === "string") return err;
+  if (err instanceof Error) return err.message;
+  return "An unexpected error occurred";
+};
+
+// Custom hook for dialog state management
+const useAssignRoleDialog = () => {
+  const [selectedUser, setSelectedUser] = useState<Employee | null>(null);
+  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const open = (user: Employee) => {
+    setSelectedUser(user);
+    setSelectedRole(DEFAULT_ACCEPT_ROLE);
+    setIsSaving(false);
+    setErrorMessage(null);
+  };
+
+  const close = () => {
+    setSelectedUser(null);
+    setSelectedRole(null);
+    setIsSaving(false);
+    setErrorMessage(null);
+  };
+
+  const resetError = () => setErrorMessage(null);
+
+  return {
+    selectedUser,
+    selectedRole,
+    isSaving,
+    errorMessage,
+    setSelectedRole,
+    setIsSaving,
+    setErrorMessage,
+    open,
+    close,
+    resetError,
+  };
+};
 
 const PendingAccounts = () => {
   const { data: session } = useSession();
@@ -24,11 +68,7 @@ const PendingAccounts = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
-  // Dialog state
-  const [selectedUser, setSelectedUser] = useState<Employee | null>(null);
-  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const dialog = useAssignRoleDialog();
 
   useEffect(() => {
     const fetchPending = async () => {
@@ -48,65 +88,30 @@ const PendingAccounts = () => {
   const filtered = useMemo(() => {
     return searchEmployees(pending, searchQuery);
   }, [pending, searchQuery]);
-  const openAssignDialog = (user: Employee) => {
-    setSelectedUser(user);
-    setSelectedRole(DEFAULT_ACCEPT_ROLE);
-    setIsSaving(false);
-    setErrorMessage(null);
-  };
-
-  const closeAssignDialog = () => {
-    setSelectedUser(null);
-    setSelectedRole(null);
-    setIsSaving(false);
-    setErrorMessage(null);
-  };
 
   const confirmAssignRole = async () => {
+    const { selectedUser, selectedRole } = dialog;
+
     if (!selectedUser?.uid || !selectedRole) {
-      closeAssignDialog();
+      dialog.close();
       return;
     }
+
     try {
-      setIsSaving(true);
-      setErrorMessage(null);
+      dialog.setIsSaving(true);
+      dialog.resetError();
       await acceptPendingUser(selectedUser.uid, selectedRole);
       setPending((prev) => removePendingUser(prev, selectedUser));
       toast.success(
         `${selectedUser.name} accepted as ${getRoleLabel(selectedRole)}.`
       );
-      closeAssignDialog();
+      dialog.close();
     } catch (err) {
-      const message =
-        typeof err === "string"
-          ? err
-          : err instanceof Error
-          ? err.message
-          : "Failed to assign role";
-      setErrorMessage(message);
+      const message = getErrorMessage(err);
+      dialog.setErrorMessage(message);
       toast.error(message);
     } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleReject = async (user: Employee) => {
-    if (!user.email) {
-      toast.error("Cannot reject user without email");
-      return;
-    }
-    try {
-      await rejectPendingUser(user.email);
-      setPending((prev) => removePendingUser(prev, user));
-      toast.success(`${user.email} rejected and blacklisted.`);
-    } catch (err) {
-      const message =
-        typeof err === "string"
-          ? err
-          : err instanceof Error
-          ? err.message
-          : "Failed to reject user";
-      toast.error(message);
+      dialog.setIsSaving(false);
     }
   };
 
@@ -153,43 +158,46 @@ const PendingAccounts = () => {
             </motion.div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filtered.map((user, index) => (
-              <motion.div
-                className="text-left"
-                key={user.uid ?? user.email}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  delay: 0.02 * index,
-                  type: "spring",
-                  stiffness: 70,
-                }}
-              >
-                <PendingEmployeeCard
-                  name={user.name}
-                  email={user.email}
-                  role={user.role}
-                  onAccept={() => openAssignDialog(user)}
-                  onReject={() => handleReject(user)}
-                />
-              </motion.div>
-            ))}
-          </div>
+          {filtered.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {filtered.map((user, index) => (
+                <motion.div
+                  className="text-left"
+                  key={user.uid ?? user.email}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: 0.02 * index,
+                    type: "spring",
+                    stiffness: 70,
+                  }}
+                >
+                  <PendingEmployeeCard
+                    name={user.name}
+                    email={user.email}
+                    role={user.role}
+                    onAccept={() => dialog.open(user)}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          )}
         </ScrollArea>
       </div>
 
       <AssignRoleDialog
-        open={!!selectedUser}
+        open={!!dialog.selectedUser}
         userDisplay={
-          selectedUser ? selectedUser.name || selectedUser.email : ""
+          dialog.selectedUser
+            ? dialog.selectedUser.name || dialog.selectedUser.email
+            : ""
         }
-        selectedRole={selectedRole}
-        onSelectedRoleChange={setSelectedRole}
-        onClose={closeAssignDialog}
+        selectedRole={dialog.selectedRole}
+        onSelectedRoleChange={dialog.setSelectedRole}
+        onClose={dialog.close}
         onConfirm={confirmAssignRole}
-        isSaving={isSaving}
-        errorMessage={errorMessage}
+        isSaving={dialog.isSaving}
+        errorMessage={dialog.errorMessage}
       />
     </div>
   );
