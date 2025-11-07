@@ -73,7 +73,9 @@ export const DashboardHeader = memo(
                 disabled={isRefreshing}
               >
                 <RefreshCw
-                  className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+                  className={`mr-2 h-4 w-4 ${
+                    isRefreshing ? "animate-spin" : ""
+                  }`}
                 />
                 Refresh
               </Button>
@@ -108,7 +110,7 @@ export const DashboardHeader = memo(
               <DropdownMenuTrigger asChild>
                 <Avatar className="rounded-md">
                   <AvatarImage src={session?.user?.image?.toString()} />
-                  <AvatarFallback>CN</AvatarFallback>
+                  <AvatarFallback>NEU</AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
@@ -132,7 +134,7 @@ export const DashboardHeader = memo(
         </div>
       </header>
     );
-  },
+  }
 );
 
 DashboardHeader.displayName = "DashboardHeader";
