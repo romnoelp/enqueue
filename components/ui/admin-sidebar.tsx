@@ -24,7 +24,14 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import ModeToggle from "../theming/ModeToggle";
 
@@ -37,6 +44,8 @@ const menuItems = [
   { title: "Analytics", icon: BarChart3, href: "/analytics" },
 ];
 export const AdminSidebar = memo(() => {
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
 
   return (
     <Sidebar collapsible="icon">
@@ -67,12 +76,28 @@ export const AdminSidebar = memo(() => {
                 const Icon = item.icon;
                 return (
                   <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton asChild>
-                      <Link prefetch={false} href={item.href}>
-                        <Icon />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
+                    {isCollapsed ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <SidebarMenuButton asChild>
+                            <Link prefetch={false} href={item.href}>
+                              <Icon />
+                              <span>{item.title}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">
+                          <p>{item.title}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <SidebarMenuButton asChild>
+                        <Link prefetch={false} href={item.href}>
+                          <Icon />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    )}
                   </SidebarMenuItem>
                 );
               })}
@@ -84,7 +109,20 @@ export const AdminSidebar = memo(() => {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <ModeToggle />
+            {isCollapsed ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <ModeToggle />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>Toggle Theme</p>
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <ModeToggle />
+            )}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
