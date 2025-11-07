@@ -1,33 +1,15 @@
-"use client";
-
 import { ReactNode } from "react";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { AdminSidebar } from "@/components/ui/admin-sidebar";
-import { DashboardHeader } from "@/components/ui/dashboard-header";
+import { cookies } from "next/headers";
+import DashboardLayoutClient from "./_components/DashboardLayoutClient";
 
-const DashboardLayout = ({ children }: { children: ReactNode }) => {
-  const handleRefresh = () => {
-    console.log("Refresh");
-  };
-
-  const handleExport = () => {
-    console.log("Export");
-  };
+const DashboardLayout = async ({ children }: { children: ReactNode }) => {
+  const cookieStore = await cookies();
+  const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
 
   return (
-    <>
-      <SidebarProvider>
-        <AdminSidebar />
-        <SidebarInset>
-          <DashboardHeader
-            onRefresh={handleRefresh}
-            onExport={handleExport}
-            isRefreshing={false}
-          />
-          {children}
-        </SidebarInset>
-      </SidebarProvider>
-    </>
+    <DashboardLayoutClient defaultOpen={defaultOpen}>
+      {children}
+    </DashboardLayoutClient>
   );
 };
 
