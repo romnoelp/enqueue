@@ -22,7 +22,7 @@ export type ActionType = typeof ACTION_TYPES[keyof typeof ACTION_TYPES];
 
 // Activity log
 export interface ActivityLog {
-  userId: string;
+  uid: string;
   action: ActionType;
   timestamp: number;
   details?: string;

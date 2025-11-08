@@ -4,13 +4,12 @@ import { firestoreDb } from "@/app/lib/backend/firebase-admin";
 
 // GET - Get activity logs with date filtering
 export const GET = async (req: NextRequest) => {
-  // Verify authentication and admin/superAdmin role
-  const authResult = await verifyAuthAndRole( ["admin", "superAdmin"]);
-  if (!authResult.success) {
-    return authResult.response;
-  }
-
   try {
+    const authResult = await verifyAuthAndRole(["admin", "superAdmin"]);
+    if (!authResult.success) {
+      return authResult.response;
+    }
+
     const { searchParams } = new URL(req.url);
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
@@ -22,30 +21,25 @@ export const GET = async (req: NextRequest) => {
       );
     }
 
-    // Convert to timestamps for Firestore
     const startTimestamp = new Date(startDate).getTime();
     const endTimestamp = new Date(endDate).getTime();
 
-    // Query activity logs within date range
-    const activityRef = firestoreDb
+    const activitiesSnapshot = await firestoreDb
       .collection("activity-log")
       .where("timestamp", ">=", startTimestamp)
       .where("timestamp", "<=", endTimestamp)
-      .orderBy("timestamp", "desc");
+      .orderBy("timestamp", "desc")
+      .get();
 
-    const activitiesSnapshot = await activityRef.get();
-
-    // Map activity logs to array
     const activityLogs = activitiesSnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
 
-    return NextResponse.json({ activities: activityLogs });
+    return NextResponse.json({ activities: activityLogs }, { status: 200 });
   } catch (error) {
-    console.error("Error getting activity logs:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { message: (error as Error).message },
       { status: 500 }
     );
   }

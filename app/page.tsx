@@ -67,14 +67,14 @@ export default function GradientHero() {
             transition={{ duration: 0.8, ease: "easeInOut" }}
             className="text-center"
           >
-            <motion.h1
-              className="from-primary via-primary/80 to-primary/60 bg-linear-to-r bg-clip-text text-6xl font-bold tracking-tight text-transparent sm:text-7xl md:text-8xl lg:text-9xl"
+            <motion.h2
+              className="from-primary via-primary/80 to-primary/60 bg-linear-to-r bg-clip-text text-5xl font-bold tracking-tight text-transparent sm:text-6xl md:text-7xl lg:text-8xl"
               initial={{ letterSpacing: "0.1em" }}
               animate={{ letterSpacing: "0em" }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
               enQueue
-            </motion.h1>
+            </motion.h2>
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: "100%" }}
