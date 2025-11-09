@@ -8,7 +8,7 @@ import { ACTION_TYPES } from "@/types";
 // DELETE - Delete station (with activation check)
 export const DELETE = async (
   req: NextRequest,
-  { params }: { params: { stationID: string } }
+  context: { params: Promise<{ stationID: string }> }
 ) => {
   // Verify authentication and admin/superAdmin role
   const authResult = await verifyAuthAndRole( ["admin", "superAdmin"]);
@@ -35,7 +35,8 @@ export const DELETE = async (
   const displayName = authResult.session.user.name || uid;
 
   try {
-    const { stationID } = params;
+  const { params } = context;
+  const { stationID } = await params;
 
     if (!stationID) {
       return NextResponse.json(

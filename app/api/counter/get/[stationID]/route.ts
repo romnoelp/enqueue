@@ -11,8 +11,10 @@ export const GET = async (
   const { stationID } = await context.params;
 
   // Verify auth and check if user has admin or superAdmin role
-  const authError = await verifyAuthAndRole( ["admin", "superAdmin"]);
-  if (authError) return authError;
+  const authResult = await verifyAuthAndRole(["admin", "superAdmin"]);
+  if (!authResult.success) {
+    return authResult.response;
+  }
 
   try {
     // Get all counters

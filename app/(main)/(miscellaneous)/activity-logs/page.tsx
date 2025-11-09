@@ -1,11 +1,12 @@
+"use client";
+
+import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Actions from "./_components/Actions";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -57,9 +58,18 @@ const invoices = [
 ];
 
 const ActivityLogs = () => {
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+
   return (
     <div className="h-full border border-blue-300 flex flex-col gap-y-4 p-4">
-      <Actions />
+      <Actions
+        startDate={startDate}
+        endDate={endDate}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
+        totalCount={invoices.length}
+      />
       <div className="flex-1 flex flex-col overflow-hidden border border-red-500">
         <Table className="border border-black">
           <TableHeader>

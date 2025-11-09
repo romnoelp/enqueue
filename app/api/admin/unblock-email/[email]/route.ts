@@ -7,7 +7,7 @@ import { ACTION_TYPES } from "@/types";
 // DELETE - Remove email from blacklist
 export const DELETE = async (
   req: NextRequest,
-  { params }: { params: { email: string } }
+  context: { params: Promise<{ email: string }> }
 ) => {
   // Verify authentication and admin/superAdmin role
   const authResult = await verifyAuthAndRole( ["admin", "superAdmin"]);
@@ -34,7 +34,8 @@ export const DELETE = async (
   const displayName = authResult.session.user.name || uid;
 
   try {
-    const { email } = params;
+  const { params } = context;
+  const { email } = await params;
 
     if (!email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });

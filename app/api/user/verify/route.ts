@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { verifyAuthTokenAndDomain } from "@/app/lib/middlewares/auth";
 import { realtimeDb } from "@/app/lib/backend/firebase-admin";
 import { neuQueueAppRoles } from "@/app/lib/utils/roles";
 
 // Verify user account and assign role if needed
-export const GET = async (request: NextRequest) => {
+export const GET = async () => {
   try {
     // Verify authentication using Better Auth
-    const authResult = await verifyAuthTokenAndDomain(request);
+    const authResult = await verifyAuthTokenAndDomain();
     if (!authResult.success) {
       return authResult.response;
     }

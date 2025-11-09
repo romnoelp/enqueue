@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { ChevronDownIcon } from "lucide-react"
+import * as React from "react";
+import { ChevronDownIcon } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
-import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@/components/ui/popover";
 
 interface ActionsProps {
   startDate: Date | undefined;
@@ -27,8 +27,8 @@ const Actions = ({
   onEndDateChange,
   totalCount = 0,
 }: ActionsProps) => {
-  const [openStart, setOpenStart] = React.useState(false)
-  const [openEnd, setOpenEnd] = React.useState(false)
+  const [openStart, setOpenStart] = React.useState(false);
+  const [openEnd, setOpenEnd] = React.useState(false);
 
   return (
     <div className="flex flex-col">
@@ -50,14 +50,17 @@ const Actions = ({
                   <ChevronDownIcon />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+              <PopoverContent
+                className="w-auto overflow-hidden p-0"
+                align="start"
+              >
                 <Calendar
                   mode="single"
                   selected={startDate}
                   captionLayout="dropdown"
                   onSelect={(date) => {
-                    onStartDateChange(date)
-                    setOpenStart(false)
+                    onStartDateChange(date);
+                    setOpenStart(false);
                   }}
                 />
               </PopoverContent>
@@ -80,14 +83,17 @@ const Actions = ({
                   <ChevronDownIcon />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+              <PopoverContent
+                className="w-auto overflow-hidden p-0"
+                align="start"
+              >
                 <Calendar
                   mode="single"
                   selected={endDate}
                   captionLayout="dropdown"
                   onSelect={(date) => {
-                    onEndDateChange(date)
-                    setOpenEnd(false)
+                    onEndDateChange(date);
+                    setOpenEnd(false);
                   }}
                 />
               </PopoverContent>
@@ -95,10 +101,12 @@ const Actions = ({
           </div>
         </div>
 
-        <div className="text-sm text-muted-foreground">{totalCount} results</div>
+        <div className="text-sm text-muted-foreground">
+          {totalCount} results
+        </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Actions
+export default Actions;

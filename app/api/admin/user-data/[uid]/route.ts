@@ -5,7 +5,7 @@ import { realtimeDb } from "@/app/lib/backend/firebase-admin";
 // GET - Get specific user data by UID
 export const GET = async (
   req: NextRequest,
-  { params }: { params: { uid: string } }
+  context: { params: Promise<{ uid: string }> }
 ) => {
   // Verify authentication and admin/superAdmin role
   const authResult = await verifyAuthAndRole( ["admin", "superAdmin"]);
@@ -14,7 +14,8 @@ export const GET = async (
   }
 
   try {
-    const { uid } = params;
+  const { params } = context;
+  const { uid } = await params;
 
     if (!uid) {
       return NextResponse.json({ error: "Missing uid" }, { status: 400 });
