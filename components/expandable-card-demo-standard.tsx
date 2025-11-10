@@ -1,17 +1,10 @@
 "use client";
+
 import React, { useEffect, useId, useRef, useState } from "react";
-import {
-  Tabs,
-  TabsPanel,
-  TabsPanels,
-  TabsList,
-  TabsTab,
-} from "@/components/animate-ui/components/base/tabs";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { AnimatePresence, motion } from "motion/react";
 import { useOutsideClick } from "@/hooks/use-outside-click";
 
-export function ExpandableCardDemo() {
+export default function ExpandableCardDemo() {
   const [active, setActive] = useState<(typeof cards)[number] | boolean | null>(
     null
   );
@@ -323,32 +316,3 @@ const cards = [
     },
   },
 ];
-
-const Stations = () => {
-  return (
-    <div className="p-6 h-full">
-      <Tabs className="h-full" defaultValue="account">
-        <TabsList className="w-full">
-          <TabsTab value="account">Stations</TabsTab>
-          <TabsTab value="password">Counters</TabsTab>
-        </TabsList>
-        <Card className="h-full shadow-none py-0">
-          <TabsPanels className="">
-            <TabsPanel value="account" className="flex flex-col gap-6">
-              <CardHeader></CardHeader>
-              <CardContent className="grid gap-6">
-                <ExpandableCardDemo />
-              </CardContent>
-            </TabsPanel>
-            <TabsPanel value="password" className="flex flex-col gap-6">
-              <CardHeader></CardHeader>
-              <CardContent className="grid gap-6"></CardContent>
-            </TabsPanel>
-          </TabsPanels>
-        </Card>
-      </Tabs>
-    </div>
-  );
-};
-
-export default Stations;
