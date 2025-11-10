@@ -25,7 +25,6 @@ const Actions = ({
   endDate,
   onStartDateChange,
   onEndDateChange,
-  totalCount = 0,
 }: ActionsProps) => {
   const [openStart, setOpenStart] = React.useState(false);
   const [openEnd, setOpenEnd] = React.useState(false);
@@ -99,10 +98,6 @@ const Actions = ({
               </PopoverContent>
             </Popover>
           </div>
-        </div>
-
-        <div className="text-sm text-muted-foreground">
-          {totalCount} results
         </div>
       </div>
     </div>

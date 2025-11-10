@@ -1,104 +1,103 @@
 "use client";
 
-import { useState } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useState, useEffect, useCallback } from "react";
+import BounceLoader from "@/components/mvpblocks/bouncing-loader";
+import { fetchLogs } from "./_utils/data";
+import LogsTable from "./_components/LogsTable";
+import LogRow from "./_components/LogRow";
+import EmptyState from "./_components/EmptyState";
+import ErrorState from "./_components/ErrorState";
 import Actions from "./_components/Actions";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
-const invoices = [
-  {
-    invoice: "INV001",
-    paymentStatus: "Paid",
-    totalAmount: "$250.00",
-    paymentMethod: "Credit Card",
-  },
-  {
-    invoice: "INV002",
-    paymentStatus: "Pending",
-    totalAmount: "$150.00",
-    paymentMethod: "PayPal",
-  },
-  {
-    invoice: "INV003",
-    paymentStatus: "Unpaid",
-    totalAmount: "$350.00",
-    paymentMethod: "Bank Transfer",
-  },
-  {
-    invoice: "INV004",
-    paymentStatus: "Paid",
-    totalAmount: "$450.00",
-    paymentMethod: "Credit Card",
-  },
-  {
-    invoice: "INV005",
-    paymentStatus: "Paid",
-    totalAmount: "$550.00",
-    paymentMethod: "PayPal",
-  },
-  {
-    invoice: "INV006",
-    paymentStatus: "Pending",
-    totalAmount: "$200.00",
-    paymentMethod: "Bank Transfer",
-  },
-  {
-    invoice: "INV007",
-    paymentStatus: "Unpaid",
-    totalAmount: "$300.00",
-    paymentMethod: "Credit Card",
-  },
-];
+import type { ActivityLog } from "@/types/activity";
 
 const ActivityLogs = () => {
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const today = new Date();
+  const sevenDaysAgo = new Date(today);
+  sevenDaysAgo.setDate(today.getDate() - 6);
+
+  const [startDate, setStartDate] = useState<Date | undefined>(sevenDaysAgo);
+  const [endDate, setEndDate] = useState<Date | undefined>(today);
+  const [logs, setLogs] = useState<ActivityLog[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadLogs = useCallback(async () => {
+    if (!startDate || !endDate) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await fetchLogs(startDate, endDate);
+      setLogs(data);
+    } catch {
+      setError("Failed to load activity logs");
+      setLogs([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [startDate, endDate]);
+
+  useEffect(() => {
+    loadLogs();
+  }, [loadLogs]);
+
+  if (loading) {
+    return (
+      <div className="h-full flex flex-col gap-y-4 p-4">
+        <Actions
+          startDate={startDate}
+          endDate={endDate}
+          onStartDateChange={setStartDate}
+          onEndDateChange={setEndDate}
+        />
+        <div className="flex-1 flex items-center justify-center">
+          <BounceLoader />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-full flex flex-col gap-y-4 p-4">
+        <Actions
+          startDate={startDate}
+          endDate={endDate}
+          onStartDateChange={setStartDate}
+          onEndDateChange={setEndDate}
+        />
+        <div className="flex-1">
+          <ErrorState message={error} onRetry={loadLogs} />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="h-full border border-blue-300 flex flex-col gap-y-4 p-4">
+    <div className="h-full flex flex-col gap-y-4 p-4">
       <Actions
         startDate={startDate}
         endDate={endDate}
         onStartDateChange={setStartDate}
         onEndDateChange={setEndDate}
-        totalCount={invoices.length}
       />
-      <div className="flex-1 flex flex-col overflow-hidden border border-red-500">
-        <Table className="border border-black">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[180px]">Timestamp</TableHead>
-              <TableHead className="w-[200px]">User ID</TableHead>
-              <TableHead className="w-[180px]">Action</TableHead>
-              <TableHead>Details</TableHead>
-            </TableRow>
-          </TableHeader>
-        </Table>
-        <ScrollArea className="flex-1 border border-green-500">
-          <Table>
-            <TableBody>
-              {invoices.map((invoice) => (
-                <TableRow key={invoice.invoice}>
-                  <TableCell className="font-medium">
-                    {invoice.invoice}
-                  </TableCell>
-                  <TableCell>{invoice.paymentStatus}</TableCell>
-                  <TableCell>{invoice.paymentMethod}</TableCell>
-                  <TableCell className="text-right">
-                    {invoice.totalAmount}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </ScrollArea>
+
+      <div className="flex-1 overflow-hidden">
+        {logs.length === 0 ? (
+          <LogsTable>
+            <EmptyState />
+          </LogsTable>
+        ) : (
+          <LogsTable>
+            {logs.map((log) => (
+              <LogRow
+                key={`${log.timestamp}-${log.uid}-${log.action}`}
+                log={log}
+              />
+            ))}
+          </LogsTable>
+        )}
       </div>
     </div>
   );
