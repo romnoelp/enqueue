@@ -8,7 +8,7 @@ const DashboardLayout = async ({ children }: { children: ReactNode }) => {
 
   return (
     <DashboardLayoutClient defaultOpen={defaultOpen}>
-      {children}
+      <div className="p-6 h-full w-full">{children}</div>
     </DashboardLayoutClient>
   );
 };
