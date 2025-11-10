@@ -20,13 +20,13 @@ export async function proxy(request: NextRequest) {
 
   // Allow exact public routes
   if (publicRoutes.includes(pathname)) {
-    console.log("[PROXY] ✅ Allowed (public route):", pathname);
+    console.log("[PROXY] Allowed (public route):", pathname);
     return NextResponse.next();
   }
 
   // Allow routes that start with public path prefixes (e.g., /api/auth/*)
   if (publicPathPrefixes.some((prefix) => pathname.startsWith(prefix))) {
-    console.log("[PROXY] ✅ Allowed (auth route):", pathname);
+    console.log("[PROXY] Allowed (auth route):", pathname);
     return NextResponse.next();
   }
 
@@ -56,7 +56,7 @@ export async function proxy(request: NextRequest) {
 
     // If no session, redirect to home page
     if (!session || !session.user) {
-      console.log("[PROXY] ❌ No session - redirecting to /");
+      console.log("[PROXY] No session - redirecting to /");
       const url = request.nextUrl.clone();
       url.pathname = "/";
       return NextResponse.redirect(url);
@@ -66,17 +66,17 @@ export async function proxy(request: NextRequest) {
 
     // Verify email domain
     if (!session.user.email?.endsWith("@neu.edu.ph")) {
-      console.log("[PROXY] ❌ Invalid email domain - redirecting to /");
+      console.log("[PROXY] Invalid email domain - redirecting to /");
       const url = request.nextUrl.clone();
       url.pathname = "/";
       return NextResponse.redirect(url);
     }
 
-    console.log("[PROXY] ✅ Authentication successful - allowing access");
+    console.log("[PROXY] Authentication successful - allowing access");
     // Allow access to protected routes
     return NextResponse.next();
   } catch (error) {
-    console.error("[PROXY] ❌ Auth error:", error);
+    console.error("[PROXY] Auth error:", error);
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);

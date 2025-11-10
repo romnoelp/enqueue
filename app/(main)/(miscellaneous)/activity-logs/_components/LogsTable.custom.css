@@ -1,0 +1,8 @@
+@media (width: 1280px) and (height: 720px) {
+  .border-purple-500-1280x720 {
+    border-color: #a855f7 !important; 
+  }
+  .height-1280x720 {
+    height: 500px !important; 
+  }
+}

@@ -5,9 +5,14 @@ export const fetchLogs = async (
   startDate: Date,
   endDate: Date
 ): Promise<ActivityLog[]> => {
+  const start = new Date(startDate);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(endDate);
+  end.setHours(23, 59, 59, 999);
+
   const params = new URLSearchParams({
-    startDate: startDate.toISOString(),
-    endDate: endDate.toISOString(),
+    startDate: start.toISOString(),
+    endDate: end.toISOString(),
   });
 
   try {

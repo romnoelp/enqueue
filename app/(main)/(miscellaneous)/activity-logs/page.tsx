@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import BounceLoader from "@/components/mvpblocks/bouncing-loader";
 import { fetchLogs } from "./_utils/data";
 import LogsTable from "./_components/LogsTable";
@@ -18,6 +18,7 @@ const ActivityLogs = () => {
   const [startDate, setStartDate] = useState<Date | undefined>(sevenDaysAgo);
   const [endDate, setEndDate] = useState<Date | undefined>(today);
   const [logs, setLogs] = useState<ActivityLog[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,6 +42,17 @@ const ActivityLogs = () => {
   useEffect(() => {
     loadLogs();
   }, [loadLogs]);
+
+  const filteredLogs = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return logs;
+    return logs.filter((log) => {
+      const details = (log.details ?? "").toLowerCase();
+      const uid = String(log.uid ?? "").toLowerCase();
+      const action = String(log.action ?? "").toLowerCase();
+      return details.includes(q) || uid.includes(q) || action.includes(q);
+    });
+  }, [logs, searchQuery]);
 
   if (loading) {
     return (
@@ -81,6 +93,8 @@ const ActivityLogs = () => {
         endDate={endDate}
         onStartDateChange={setStartDate}
         onEndDateChange={setEndDate}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
       />
 
       <div className="flex-1 overflow-hidden">
@@ -88,11 +102,15 @@ const ActivityLogs = () => {
           <LogsTable>
             <EmptyState />
           </LogsTable>
+        ) : filteredLogs.length === 0 ? (
+          <LogsTable>
+            <EmptyState />
+          </LogsTable>
         ) : (
           <LogsTable>
-            {logs.map((log) => (
+            {filteredLogs.map((log) => (
               <LogRow
-                key={`${log.timestamp}-${log.uid}-${log.action}`}
+                key={`${log.timestamp}-${log.uid}-${String(log.action)}`}
                 log={log}
               />
             ))}
