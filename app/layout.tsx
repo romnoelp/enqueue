@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "enQueue",
+  title: "enQueue | Admin",
   description: "Digital Queueing app for New Era University",
 };
 
