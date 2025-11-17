@@ -13,3 +13,21 @@ export interface Counter {
   uid: string;
   serving: string | null;
 }
+
+export interface StationApiItem {
+  id?: string | number;
+  name?: string;
+  description?: string;
+  type?: CashierType | string;
+  activated?: boolean;
+}
+
+export type StationInitialData = Partial<Station> | null;
+
+// Represents the station object used in lists/pages (may include metadata)
+export type StationListItem = Partial<Station> & {
+  id?: string | number;
+  role?: string;
+  email?: string;
+  name?: string;
+};

@@ -14,6 +14,54 @@ type Station = {
   email?: string;
 };
 
+const parseStationsResponse = (res: unknown): Station[] => {
+  if (Array.isArray(res)) return res as Station[];
+
+  if (!res || typeof res !== "object") return [];
+
+  const obj = res as Record<string, unknown>;
+
+  const candidates = ["data", "stations", "rows"];
+  for (const key of candidates) {
+    if (Array.isArray(obj[key])) return obj[key] as Station[];
+  }
+
+  if (Array.isArray(obj.cashierLocationList)) {
+    const raw = obj.cashierLocationList as unknown as Array<
+      Record<string, unknown>
+    >;
+    return raw.map((rawItem) => ({
+      id: (rawItem.id ?? rawItem.uid ?? "") as string,
+      name: (rawItem.name ?? "") as string,
+      role: (rawItem.type ?? rawItem.role ?? "") as string,
+      email: (rawItem.description ?? rawItem.email ?? "") as string,
+    }));
+  }
+
+  return [];
+};
+
+const LoadingState = () => (
+  <div className="h-full flex items-center justify-center">
+    <BounceLoader />
+  </div>
+);
+
+const ErrorState = ({ message }: { message: string | null }) => (
+  <div className="text-red-500">Error loading stations: {message}</div>
+);
+
+const StationsGrid = ({ items }: { items: Station[] }) => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    {items.map((stationItem, index) => (
+      <StationMorphingDialogTest
+        key={stationItem?.id ?? `station-${index}`}
+        station={stationItem}
+      />
+    ))}
+  </div>
+);
+
 const Stations = () => {
   const [stations, setStations] = useState<Station[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -25,33 +73,7 @@ const Stations = () => {
     const fetchStations = async () => {
       try {
         const res = await apiFetch<unknown>("/station/get");
-        let list: Station[] = [];
-
-        if (Array.isArray(res)) {
-          list = res as Station[];
-        } else if (res && typeof res === "object") {
-          const obj = res as Record<string, unknown>;
-          if (Array.isArray(obj.data)) list = obj.data as Station[];
-          else if (Array.isArray(obj.stations))
-            list = obj.stations as Station[];
-          else if (Array.isArray(obj.rows)) list = obj.rows as Station[];
-          else if (Array.isArray(obj.cashierLocationList)) {
-            // Some endpoints (e.g. cashier location list) return a wrapped object
-            // { cashierLocationList: [ ...items ] } where each item has fields like
-            // { id, activated, description, name, type }.
-            // Map those into our local Station shape.
-            const raw = obj.cashierLocationList as unknown as Array<
-              Record<string, unknown>
-            >;
-            list = raw.map((it) => ({
-              id: (it.id ?? it.uid ?? "") as string,
-              name: (it.name ?? "") as string,
-              role: (it.type ?? it.role ?? "") as string,
-              email: (it.description ?? it.email ?? "") as string,
-            }));
-          } else list = [];
-        }
-
+        const list = parseStationsResponse(res);
         if (mounted) setStations(list);
       } catch (err: unknown) {
         if (mounted)
@@ -74,22 +96,9 @@ const Stations = () => {
         <Button>Add Station</Button>
       </div>
       <div className="h-full">
-        {loading ? (
-          <div className="h-full flex items-center justify-center">
-            <BounceLoader />
-          </div>
-        ) : error ? (
-          <div className="text-red-500">Error loading stations: {error}</div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {(stations || []).map((s, i) => (
-              <StationMorphingDialogTest
-                key={s?.id ?? `station-${i}`}
-                station={s}
-              />
-            ))}
-          </div>
-        )}
+        {loading && <LoadingState />}
+        {!loading && error && <ErrorState message={error} />}
+        {!loading && !error && <StationsGrid items={stations ?? []} />}
       </div>
     </div>
   );
