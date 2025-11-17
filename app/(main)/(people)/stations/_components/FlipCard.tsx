@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import type { Station as ImportedStation } from "@/types/station";
 import { MorphingDialogTrigger } from "@/components/motion-primitives/morphing-dialog";
 import { Button } from "@/components/ui/button";
@@ -12,10 +12,9 @@ type Station = Partial<ImportedStation> & {
   name?: string;
 };
 
-const FlipCard: React.FC<{ station?: Station; title: string }> = ({
-  station,
-  title,
-}) => {
+type Props = { station?: Station; title: string };
+
+const FlipCard = ({ station, title }: Props) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const CARD_HEIGHT = 200;
   const FLIP_DURATION = 300;

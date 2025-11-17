@@ -13,19 +13,36 @@ import {
   MorphingDialogClose,
   MorphingDialogContainer,
 } from "@/components/motion-primitives/morphing-dialog";
+import { apiFetch } from "@/app/lib/backend/api";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DetailContent from "./DetailContent";
 import FlipCard from "./FlipCard";
 
-export const StationMorphingDialogTest = ({ station }: { station?: StationListItem }) => {
+export const StationMorphingDialogTest = ({
+  station,
+}: {
+  station?: StationListItem;
+}) => {
   const title = station?.name ?? "New Station";
   const [initialData, setInitialData] = useState<StationInitialData>(null);
+  const [loadingInitialData, setLoadingInitialData] = useState<boolean>(true);
 
   useEffect(() => {
     const abort = { aborted: false };
+    if (station) {
+      setInitialData({
+        name: station.name ?? "",
+        description: station.description ?? "",
+        type: station.type as unknown as ImportedStation["type"],
+        activated: Boolean(station.activated),
+      });
+    } else {
+      setInitialData(null);
+    }
 
     (async () => {
+      if (!abort.aborted) setLoadingInitialData(true);
       try {
         const res = await fetch("/api/station/get");
         const data = await res.json();
@@ -47,18 +64,20 @@ export const StationMorphingDialogTest = ({ station }: { station?: StationListIt
             activated: found.activated,
           });
         } else {
-          setInitialData(null);
+          if (!station) setInitialData(null);
         }
       } catch (err) {
         console.error("Failed to fetch stations", err);
-        setInitialData(null);
+        if (!station) setInitialData(null);
+      } finally {
+        if (!abort.aborted) setLoadingInitialData(false);
       }
     })();
 
     return () => {
       abort.aborted = true;
     };
-  }, [station?.id]);
+  }, [station]);
 
   return (
     <MorphingDialog
@@ -81,7 +100,26 @@ export const StationMorphingDialogTest = ({ station }: { station?: StationListIt
             </TabsList>
 
             <TabsContent className="w-full" value="details">
-              <DetailContent initialData={initialData} />
+              <DetailContent
+                initialData={initialData}
+                loading={loadingInitialData}
+                onSave={async (payload: StationInitialData) => {
+                  try {
+
+                    const body = { id: station?.id, ...(payload ?? {}) };
+                    await apiFetch("/station/update", {
+                      method: "POST",
+                      body: JSON.stringify(body),
+                      headers: { "Content-Type": "application/json" },
+                    });
+
+                    setInitialData((prev) => ({ ...(prev ?? {}), ...payload }));
+                  } catch (err) {
+                    console.error("Failed to save station", err);
+                    throw err;
+                  }
+                }}
+              />
             </TabsContent>
             <TabsContent value="counters">counters</TabsContent>
           </Tabs>

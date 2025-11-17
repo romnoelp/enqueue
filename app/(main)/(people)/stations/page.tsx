@@ -3,43 +3,23 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { StationMorphingDialogTest } from "./_components/StationMorphDialog";
+// Station tiles are rendered by `StationsGrid` component.
 import BounceLoader from "@/components/mvpblocks/bouncing-loader";
 import { apiFetch } from "@/app/lib/backend/api";
+import { parseStationsResponse } from "@/lib/backend/parse-stations";
+import StationsGrid from "@/components/stations/StationsGrid";
 
 type Station = {
   id?: string | number;
   name?: string;
   role?: string;
   email?: string;
+  activated?: boolean;
 };
 
-const parseStationsResponse = (res: unknown): Station[] => {
-  if (Array.isArray(res)) return res as Station[];
-
-  if (!res || typeof res !== "object") return [];
-
-  const obj = res as Record<string, unknown>;
-
-  const candidates = ["data", "stations", "rows"];
-  for (const key of candidates) {
-    if (Array.isArray(obj[key])) return obj[key] as Station[];
-  }
-
-  if (Array.isArray(obj.cashierLocationList)) {
-    const raw = obj.cashierLocationList as unknown as Array<
-      Record<string, unknown>
-    >;
-    return raw.map((rawItem) => ({
-      id: (rawItem.id ?? rawItem.uid ?? "") as string,
-      name: (rawItem.name ?? "") as string,
-      role: (rawItem.type ?? rawItem.role ?? "") as string,
-      email: (rawItem.description ?? rawItem.email ?? "") as string,
-    }));
-  }
-
-  return [];
-};
+// parseStationsResponse is moved to `lib/backend/parse-stations` and will
+// return an array of raw station-like objects; we map them below into the
+// local `Station` shape where necessary.
 
 const LoadingState = () => (
   <div className="h-full flex items-center justify-center">
@@ -51,16 +31,7 @@ const ErrorState = ({ message }: { message: string | null }) => (
   <div className="text-red-500">Error loading stations: {message}</div>
 );
 
-const StationsGrid = ({ items }: { items: Station[] }) => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-    {items.map((stationItem, index) => (
-      <StationMorphingDialogTest
-        key={stationItem?.id ?? `station-${index}`}
-        station={stationItem}
-      />
-    ))}
-  </div>
-);
+// `StationsGrid` extracted to `components/stations/StationsGrid`.
 
 const Stations = () => {
   const [stations, setStations] = useState<Station[] | null>(null);
@@ -73,7 +44,14 @@ const Stations = () => {
     const fetchStations = async () => {
       try {
         const res = await apiFetch<unknown>("/station/get");
-        const list = parseStationsResponse(res);
+        const raw = parseStationsResponse(res);
+        const list = raw.map((rawItem) => ({
+          id: (rawItem.id ?? rawItem.uid ?? "") as string,
+          name: (rawItem.name ?? "") as string,
+          role: (rawItem.type ?? rawItem.role ?? "") as string,
+          email: (rawItem.description ?? rawItem.email ?? "") as string,
+          activated: Boolean(rawItem.activated ?? rawItem.active ?? false),
+        }));
         if (mounted) setStations(list);
       } catch (err: unknown) {
         if (mounted)
