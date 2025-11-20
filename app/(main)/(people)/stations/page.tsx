@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import BounceLoader from "@/components/mvpblocks/bouncing-loader";
 import { apiFetch } from "@/app/lib/backend/api";
 import { parseStationsResponse } from "@/lib/backend/parse-stations";
-import StationsGrid from "@/components/stations/StationsGrid";
+import StationsGrid from "@/app/(main)/(people)/stations/_components/StationsGrid";
 
 type Station = {
   id?: string | number;
@@ -31,30 +31,30 @@ const Stations = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchStations = async () => {
+    setLoading(true);
+    try {
+      const res = await apiFetch<unknown>("/station/get");
+      const raw = parseStationsResponse(res);
+      const list = raw.map((rawItem) => ({
+        id: (rawItem.id ?? rawItem.uid ?? "") as string,
+        name: (rawItem.name ?? "") as string,
+        role: (rawItem.type ?? rawItem.role ?? "") as string,
+        email: (rawItem.description ?? rawItem.email ?? "") as string,
+        activated: Boolean(rawItem.activated ?? rawItem.active ?? false),
+      }));
+      setStations(list);
+      setError(null);
+    } catch (err: unknown) {
+      setError((err as { message?: string })?.message ?? String(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
-
-    const fetchStations = async () => {
-      try {
-        const res = await apiFetch<unknown>("/station/get");
-        const raw = parseStationsResponse(res);
-        const list = raw.map((rawItem) => ({
-          id: (rawItem.id ?? rawItem.uid ?? "") as string,
-          name: (rawItem.name ?? "") as string,
-          role: (rawItem.type ?? rawItem.role ?? "") as string,
-          email: (rawItem.description ?? rawItem.email ?? "") as string,
-          activated: Boolean(rawItem.activated ?? rawItem.active ?? false),
-        }));
-        if (mounted) setStations(list);
-      } catch (err: unknown) {
-        if (mounted)
-          setError((err as { message?: string })?.message ?? String(err));
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    fetchStations();
+    if (mounted) void fetchStations();
     return () => {
       mounted = false;
     };
@@ -69,7 +69,12 @@ const Stations = () => {
       <div className="h-full">
         {loading && <LoadingState />}
         {!loading && error && <ErrorState message={error} />}
-        {!loading && !error && <StationsGrid items={stations ?? []} />}
+        {!loading && !error && (
+          <StationsGrid
+            items={stations ?? []}
+            onRefresh={() => void fetchStations()}
+          />
+        )}
       </div>
     </div>
   );

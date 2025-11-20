@@ -21,8 +21,10 @@ import FlipCard from "./FlipCard";
 
 export const StationMorphingDialogTest = ({
   station,
+  onRefresh,
 }: {
   station?: StationListItem;
+  onRefresh?: () => void | Promise<void>;
 }) => {
   const title = station?.name ?? "New Station";
   const [initialData, setInitialData] = useState<StationInitialData>(null);
@@ -97,6 +99,7 @@ export const StationMorphingDialogTest = ({
       <FlipCard
         station={currentStation}
         title={currentStation?.name ?? title}
+        onDeleted={onRefresh}
       />
 
       <MorphingDialogContainer>

@@ -4,6 +4,20 @@ import { useState } from "react";
 import type { Station as ImportedStation } from "@/types/station";
 import { MorphingDialogTrigger } from "@/components/motion-primitives/morphing-dialog";
 import { Button } from "@/components/ui/button";
+import { AlertDialog } from "@/components/animate-ui/components/radix/alert-dialog";
+import {
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+  useAlertDialog,
+} from "@/components/animate-ui/components/radix/alert-dialog";
+import { toast } from "sonner";
+import { apiFetch } from "@/app/lib/backend/api";
+import ButtonLoading from "@/components/ui/button-loading";
 
 type Station = Partial<ImportedStation> & {
   id?: string | number;
@@ -12,16 +26,65 @@ type Station = Partial<ImportedStation> & {
   name?: string;
 };
 
-type Props = { station?: Station; title: string };
-
-const FlipCard = ({ station, title }: Props) => {
+type Props = {
+  station?: Station;
+  title: string;
+  onDeleted?: () => void | Promise<void>;
+};
+const FlipCard = ({ station, title, onDeleted }: Props) => {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const CARD_HEIGHT = 200;
   const FLIP_DURATION = 300;
 
+  const handleDelete = async () => {
+    if (!station?.id) {
+      toast.error("Station ID is missing");
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await apiFetch(
+        `/station/delete/${encodeURIComponent(String(station.id))}`,
+        { method: "DELETE" }
+      );
+      toast.success(`${station?.name ?? "Station"} deleted`);
+      if (onDeleted) await onDeleted();
+    } catch (err) {
+      console.error("Failed to delete station", err);
+      toast.error((err as Error).message || "Failed to delete station");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const DeleteConfirmButton = () => {
+    const { setIsOpen } = useAlertDialog();
+
+    const onConfirm = async () => {
+      await handleDelete();
+      setIsOpen?.(false);
+    };
+
+    if (isDeleting) {
+      return (
+        <ButtonLoading disabled size="sm">
+          Deleting...
+        </ButtonLoading>
+      );
+    }
+
+    return (
+      <Button variant="destructive" onClick={() => void onConfirm()}>
+        Yes, I&apos;m sure
+      </Button>
+    );
+  };
+
   return (
     <div
-      className="group relative w-full max-w-sm p-2 perspective-[2000px]"
+      className="group relative w-full max-w-sm perspective-[2000px]"
       style={{ height: CARD_HEIGHT }}
       onMouseEnter={() => setIsFlipped(true)}
       onMouseLeave={() => setIsFlipped(false)}
@@ -160,7 +223,31 @@ const FlipCard = ({ station, title }: Props) => {
                 </Button>
               </MorphingDialogTrigger>
 
-              <Button variant="destructive">Delete Station</Button>
+              <AlertDialog onOpenChange={(open) => { if (!open) setIsFlipped(false); }}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive">Delete Station</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      This action cannot be undone
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete this station?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    {isDeleting ? (
+                      <ButtonLoading disabled size="sm">
+                        Deleting...
+                      </ButtonLoading>
+                    ) : (
+                      <DeleteConfirmButton />
+                    )}
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </div>
