@@ -92,14 +92,6 @@ export const DashboardHeader = memo(
                   <Filter className="mr-2 h-4 w-4" />
                   Filter
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={onExport}>
-                  <Download className="mr-2 h-4 w-4" />
-                  Export
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onRefresh}>
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Refresh
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <Button variant="outline" size="sm">
