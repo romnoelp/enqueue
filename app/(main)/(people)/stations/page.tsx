@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import BounceLoader from "@/components/mvpblocks/bouncing-loader";
 import { apiFetch } from "@/app/lib/backend/api";
 import { parseStationsResponse } from "@/lib/backend/parse-stations";
 import StationsGrid from "@/app/(main)/(people)/stations/_components/StationsGrid";
+import AddStationDialog from "./_components/AddStationDialog";
 
 type Station = {
   id?: string | number;
@@ -63,8 +63,11 @@ const Stations = () => {
   return (
     <div className="p-4 h-full flex flex-col gap-y-4">
       <div className="flex gap-x-4">
-        <Input className="w-64" />
-        <Button>Add Station</Button>
+        <Input
+          placeholder="Main Building..."
+          className="text-muted-foreground w-92"
+        />
+        <AddStationDialog onCreated={() => void fetchStations()} />
       </div>
       <div className="h-full">
         {loading && <LoadingState />}
