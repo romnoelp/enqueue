@@ -14,6 +14,24 @@ type ActivityItem = {
   email?: string;
 };
 
+type RawActivity = {
+  id?: string;
+  uid?: string;
+  actorUID?: string;
+  actor?: string;
+  action?: string;
+  type?: string;
+  details?: Record<string, unknown>;
+  data?: Record<string, unknown>;
+  timestamp?: number | string;
+};
+
+type FetchedUserData = {
+  displayName?: string;
+  name?: string;
+  email?: string;
+} | null;
+
 const timeAgo = (ts?: number) => {
   if (!ts) return "—";
   const diff = Date.now() - ts;
@@ -47,7 +65,7 @@ export const RecentActivity = memo(() => {
         );
         const json = await res.json();
         const items: ActivityItem[] = Array.isArray(json.activities)
-          ? json.activities.map((a: any) => ({
+          ? (json.activities as RawActivity[]).map((a) => ({
               id: a.id,
               uid: a.uid ?? a.actorUID ?? a.actor ?? undefined,
               action: a.action ?? String(a.type ?? "action"),
@@ -55,7 +73,7 @@ export const RecentActivity = memo(() => {
               timestamp:
                 typeof a.timestamp === "number"
                   ? a.timestamp
-                  : Number(a.timestamp) ?? undefined,
+                  : Number(a.timestamp as string) ?? undefined,
             }))
           : [];
 
@@ -72,17 +90,20 @@ export const RecentActivity = memo(() => {
           const userFetches = uniqueUids.map((u) =>
             fetch(`/api/admin/user-data/${encodeURIComponent(u as string)}`)
               .then((r) => r.json())
-              .then((j) => ({ uid: u, data: j.userData }))
-              .catch(() => ({ uid: u, data: null }))
+              .then((j) => ({
+                uid: u,
+                data: (j as { userData?: FetchedUserData }).userData ?? null,
+              }))
+              .catch(() => ({ uid: u, data: null as FetchedUserData }))
           );
 
           const resolved = await Promise.all(userFetches);
           for (const r of resolved) {
             if (r && r.uid && r.data) {
+              const data = r.data!;
               userMap[r.uid as string] = {
-                displayName:
-                  (r.data as any).displayName ?? (r.data as any).name,
-                email: (r.data as any).email,
+                displayName: data.displayName ?? data.name,
+                email: data.email,
               };
             }
           }

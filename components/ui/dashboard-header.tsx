@@ -18,25 +18,18 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
 } from "@/components/ui/breadcrumb";
-import {
-  Bell,
-  Filter,
-  Download,
-  RefreshCw,
-  MoreHorizontal,
-} from "lucide-react";
+import { Bell, Filter, RefreshCw, MoreHorizontal } from "lucide-react";
 import { Avatar } from "./avatar";
 import { AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { signOut, useSession } from "next-auth/react";
 
 interface DashboardHeaderProps {
   onRefresh: () => void;
-  onExport: () => void;
   isRefreshing: boolean;
 }
 
 export const DashboardHeader = memo(
-  ({ onRefresh, onExport, isRefreshing }: DashboardHeaderProps) => {
+  ({ onRefresh, isRefreshing }: DashboardHeaderProps) => {
     const { data: session } = useSession();
 
     return (
@@ -61,11 +54,6 @@ export const DashboardHeader = memo(
           >
             {/* Desktop Actions */}
             <div className="hidden items-center gap-2 md:flex">
-              <Button variant="outline" size="sm" onClick={onExport}>
-                <Download className="mr-2 h-4 w-4" />
-                Export
-              </Button>
-
               <Button
                 variant="outline"
                 size="sm"
