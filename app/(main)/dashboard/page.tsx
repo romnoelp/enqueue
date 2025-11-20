@@ -3,51 +3,167 @@
 import * as motion from "motion/react-client";
 import { DashboardCard } from "@/components/ui/dashboard-card";
 import { RecentActivity } from "@/components/ui/recent-activity";
-import { RevenueChart } from "@/components/ui/revenue-chart";
-import { SystemStatus } from "@/components/ui/system-status";
 import { UsersTable } from "@/components/ui/users-table";
-import "react";
-import { Users, Activity, DollarSign, Eye } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Users, Activity, Eye, MapPin } from "lucide-react";
 import { useSession } from "next-auth/react";
 const Dashboard = () => {
-  const stats = [
+  const [stats, setStats] = useState([
     {
-      title: "Total Users",
-      value: "12,345",
-      change: "+12%",
+      title: "Employees",
+      value: "—",
+      change: "",
       changeType: "positive" as const,
       icon: Users,
       color: "text-blue-500",
       bgColor: "bg-blue-500/10",
     },
     {
-      title: "Revenue",
-      value: "$45,678",
-      change: "+8.2%",
+      title: "Stations",
+      value: "—",
+      change: "",
       changeType: "positive" as const,
-      icon: DollarSign,
+      icon: MapPin,
       color: "text-green-500",
       bgColor: "bg-green-500/10",
     },
     {
-      title: "Active Sessions",
-      value: "2,456",
-      change: "+15%",
+      title: "Active Counters",
+      value: "—",
+      change: "",
       changeType: "positive" as const,
       icon: Activity,
       color: "text-purple-500",
       bgColor: "bg-purple-500/10",
     },
     {
-      title: "Page Views",
-      value: "34,567",
-      change: "-2.4%",
+      title: "Recent Activities (7d)",
+      value: "—",
+      change: "",
       changeType: "negative" as const,
       icon: Eye,
       color: "text-orange-500",
       bgColor: "bg-orange-500/10",
     },
-  ];
+  ]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchDashboard = async () => {
+      try {
+        const end = new Date().toISOString();
+        const start = new Date(
+          Date.now() - 7 * 24 * 60 * 60 * 1000
+        ).toISOString();
+
+        const [employeesRes, activitiesRes, stationsRes] = await Promise.all([
+          fetch("/api/admin/employees"),
+          fetch(`/api/admin/get-activity?startDate=${start}&endDate=${end}`),
+          fetch("/api/station/get"),
+        ]);
+
+        const employeesJson = await employeesRes.json().catch(() => ({}));
+        const activitiesJson = await activitiesRes.json().catch(() => ({}));
+        const stationsJson = await stationsRes.json().catch(() => ({}));
+
+        const totalEmployees = Array.isArray(employeesJson.employees)
+          ? employeesJson.employees.length
+          : 0;
+
+        // Number of stations
+        const stationsCount = Array.isArray(stationsJson.cashierLocationList)
+          ? stationsJson.cashierLocationList.length
+          : 0;
+
+        const activityCount = Array.isArray(activitiesJson.activities)
+          ? activitiesJson.activities.length
+          : 0;
+
+        // Count active counters (serving or assigned) across all stations
+        let activeCounters = 0;
+        if (Array.isArray(stationsJson.cashierLocationList)) {
+          const stationsList = stationsJson.cashierLocationList as Array<{
+            id?: string;
+          }>;
+          const counterPromises = stationsList.map((station) =>
+            fetch(`/api/counter/get/${station.id ?? ""}`)
+              .then((r) => r.json())
+              .catch(() => ({}))
+          );
+
+          const counterResults = await Promise.all(counterPromises);
+
+          for (const res of counterResults) {
+            const list = Array.isArray(res.counterList) ? res.counterList : [];
+            activeCounters += list.filter((c: Record<string, unknown>) => {
+              // counters may have different fields depending on operations
+              const cRec = c as Record<string, unknown>;
+              const servingVal = cRec["serving"];
+              const uidVal = cRec["uid"];
+              const employeeCashier = cRec["employeeCashier"] ?? null;
+              const serving =
+                typeof servingVal === "string" ? servingVal.trim() : "";
+              const uid = typeof uidVal === "string" ? uidVal.trim() : "";
+              return (
+                Boolean(serving) || Boolean(uid) || Boolean(employeeCashier)
+              );
+            }).length;
+          }
+        }
+
+        if (!mounted) return;
+
+        setStats([
+          {
+            title: "Employees",
+            value: totalEmployees.toLocaleString(),
+            change: "",
+            changeType: "positive" as const,
+            icon: Users,
+            color: "text-blue-500",
+            bgColor: "bg-blue-500/10",
+          },
+          {
+            title: "Stations",
+            value: stationsCount.toLocaleString(),
+            change: "",
+            changeType: "positive" as const,
+            icon: MapPin,
+            color: "text-green-500",
+            bgColor: "bg-green-500/10",
+          },
+          {
+            title: "Active Counters",
+            value: activeCounters.toLocaleString(),
+            change: "",
+            changeType: "positive" as const,
+            icon: Activity,
+            color: "text-purple-500",
+            bgColor: "bg-purple-500/10",
+          },
+          {
+            title: "Recent Activities (7d)",
+            value: activityCount.toLocaleString(),
+            change: "",
+            changeType: "negative" as const,
+            icon: Eye,
+            color: "text-orange-500",
+            bgColor: "bg-orange-500/10",
+          },
+        ]);
+      } catch (err) {
+        // Silently ignore, keep placeholders on error
+        console.error("Error fetching dashboard data:", err);
+      }
+    };
+
+    fetchDashboard();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleAddUser = () => {
     console.log("Adding new user...");
@@ -69,14 +185,14 @@ const Dashboard = () => {
                 }}
               >
                 <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-                  Welcome Admin {session?.user?.name}!
+                  Welcome Admin, {session?.user?.name}!
                 </h1>
               </motion.div>
             ) : (
               <></>
             )}
             <p className="text-muted-foreground text-sm sm:text-base">
-              Here&apos;s what&apos;s happening with your platform today.
+              Here&apos;s what&apos;s happening with the school&apos;s counters.
             </p>
           </div>
 
@@ -88,16 +204,14 @@ const Dashboard = () => {
           </div>
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-3">
-            {/* Charts Section */}
-            <div className="space-y-4 sm:space-y-6 xl:col-span-2">
-              <RevenueChart />
-              <UsersTable onAddUser={handleAddUser} />
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-2 items-stretch">
+            <div className="space-y-4 sm:space-y-6 h-full flex flex-col">
+              <div className="h-full">
+                <UsersTable onAddUser={handleAddUser} />
+              </div>
             </div>
 
-            {/* Sidebar Section */}
-            <div className="space-y-4 sm:space-y-6">
-              <SystemStatus />
+            <div className="space-y-4 sm:space-y-6 h-full flex flex-col">
               <RecentActivity />
             </div>
           </div>

@@ -1,57 +1,83 @@
-'use client';
+"use client";
 
-import { memo } from 'react';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import {
-  TrendingUp,
-  Plus,
-  Calendar,
-  Mail,
-  MapPin,
-  MoreHorizontal,
-} from 'lucide-react';
-
-const users = [
-  {
-    id: 1,
-    name: 'Alex Johnson',
-    email: 'alex@example.com',
-    avatar: 'https://i.pravatar.cc',
-    role: 'Admin',
-    status: 'active',
-    joinDate: '2024-01-15',
-    location: 'New York, US',
-  },
-  {
-    id: 2,
-    name: 'Sarah Chen',
-    email: 'sarah@example.com',
-    avatar: 'https://i.pravatar.cc',
-    role: 'User',
-    status: 'active',
-    joinDate: '2024-02-20',
-    location: 'San Francisco, US',
-  },
-  {
-    id: 3,
-    name: 'Michael Brown',
-    email: 'michael@example.com',
-    avatar: 'https://i.pravatar.cc',
-    role: 'Moderator',
-    status: 'inactive',
-    joinDate: '2024-01-08',
-    location: 'London, UK',
-  },
-];
+import { memo, useEffect, useState } from "react";
+import { motion } from "framer-motion";
 
 interface UsersTableProps {
-  onAddUser: () => void;
+  onAddUser?: () => void;
 }
 
-export const UsersTable = memo(({ onAddUser }: UsersTableProps) => {
+type Employee = {
+  uid: string;
+  email?: string;
+  name?: string;
+  role?: string;
+  createdAt?: number | string;
+};
+
+type AdminUser = {
+  uid: string;
+  email?: string;
+  displayName?: string;
+  name?: string;
+  role?: string;
+  createdAt?: number | string;
+};
+export const UsersTable = memo(({}: UsersTableProps) => {
+  const [users, setUsers] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const formatRole = (role?: string) => {
+    if (!role) return "User";
+    // Insert space before capital letters (e.g., superAdmin -> super Admin)
+    const spaced = role.replace(/([a-z])([A-Z])/g, "$1 $2");
+    // Capitalize each word
+    return spaced
+      .split(/\s|_|-/)
+      .filter(Boolean)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+  };
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch("/api/admin/employees");
+        const json = await res.json();
+        const employees: Employee[] = Array.isArray(json.employees)
+          ? (json.employees as AdminUser[]).map((u) => ({
+              uid: u.uid,
+              email: u.email,
+              name: u.name || u.displayName || u.email,
+              role: u.role,
+              createdAt:
+                typeof u.createdAt === "number"
+                  ? u.createdAt
+                  : u.createdAt
+                  ? Number(u.createdAt)
+                  : undefined,
+            }))
+          : [];
+
+        if (mounted) setUsers(employees.slice(0, 8));
+      } catch (err) {
+        console.error("Failed to load employees", err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchUsers();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
-    <div className="border-border bg-card/40 rounded-xl border p-3 sm:p-6">
+    <div className="border-border bg-card/40 rounded-xl border p-3 sm:p-6 h-full flex flex-col">
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h3 className="text-lg font-semibold sm:text-xl">Recent Users</h3>
@@ -59,88 +85,72 @@ export const UsersTable = memo(({ onAddUser }: UsersTableProps) => {
             Latest user registrations and activity
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 text-sm text-green-500">
-            <TrendingUp className="h-4 w-4" />
-            <span>+12%</span>
-          </div>
-          <Button variant="outline" size="sm" onClick={onAddUser}>
-            <Plus className="mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">Add User</span>
-            <span className="sm:hidden">Add</span>
-          </Button>
-        </div>
       </div>
 
-      <div className="space-y-2">
-        {users.map((user, index) => (
-          <motion.div
-            key={user.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
-            className="group hover:bg-accent/50 flex flex-col items-start gap-4 rounded-lg p-4 transition-colors sm:flex-row sm:items-center"
-          >
-            <div className="flex w-full items-center gap-4 sm:w-auto">
-              <div className="relative">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={user.avatar}
-                  alt={user.name}
-                  width={40}
-                  height={40}
-                  className="rounded-full"
-                />
-                <div
-                  className={`border-background absolute -right-1 -bottom-1 h-3 w-3 rounded-full border-2 ${
-                    user.status === 'active' ? 'bg-green-500' : 'bg-red-500'
-                  }`}
-                />
-              </div>
-
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h4 className="truncate text-sm font-medium">{user.name}</h4>
-                  <span
-                    className={`rounded-full px-2 py-1 text-xs font-medium ${
-                      user.role === 'Admin'
-                        ? 'bg-purple-500/10 text-purple-500'
-                        : user.role === 'Moderator'
-                          ? 'bg-blue-500/10 text-blue-500'
-                          : 'bg-gray-500/10 text-gray-500'
-                    }`}
-                  >
-                    {user.role}
-                  </span>
+      <div className="space-y-2 flex-1 overflow-auto">
+        {loading ? (
+          <div className="text-muted-foreground p-4">Loading users…</div>
+        ) : users.length === 0 ? (
+          <div className="text-muted-foreground p-4">No users found</div>
+        ) : (
+          users.map((user, index) => (
+            <motion.div
+              key={user.uid}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className="group hover:bg-accent/50 flex items-center gap-4 rounded-lg p-3 transition-colors"
+            >
+              <div className="flex items-center gap-4 w-full">
+                <div className="relative shrink-0">
+                  <div className="border-background absolute -right-1 -bottom-1 h-3 w-3 rounded-full border-2 bg-green-500" />
                 </div>
-                <div className="text-muted-foreground mt-1 flex flex-col gap-2 text-xs sm:flex-row sm:items-center sm:gap-4">
-                  <div className="flex items-center gap-1">
-                    <Mail className="h-3 w-3" />
-                    <span className="truncate">{user.email}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />
-                    <span>{user.location}</span>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="truncate text-sm font-semibold">
+                          {user.name ?? user.email ?? user.uid}
+                        </h4>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                            user.role === "admin"
+                              ? "bg-purple-500/10 text-purple-500"
+                              : user.role === "superAdmin"
+                              ? "bg-orange-500/10 text-orange-500"
+                              : "bg-gray-500/10 text-gray-500"
+                          }`}
+                        >
+                          {formatRole(user.role)}
+                        </span>
+                      </div>
+
+                      <div className="text-muted-foreground mt-1 text-xs truncate">
+                        {user.email ?? "—"}
+                      </div>
+                    </div>
+
+                    <div className="ml-4 shrink-0 text-right">
+                      <div className="text-muted-foreground text-xs">
+                        {user.createdAt
+                          ? new Date(
+                              Number(user.createdAt)
+                            ).toLocaleDateString()
+                          : "—"}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="ml-auto flex items-center gap-3">
-              <div className="text-muted-foreground flex items-center gap-1 text-xs">
-                <Calendar className="h-3 w-3" />
-                <span>{new Date(user.joinDate).toLocaleDateString()}</span>
-              </div>
-
-              <Button variant="ghost" size="sm" className="ml-auto">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </div>
-          </motion.div>
-        ))}
+              {/* action button removed by request */}
+            </motion.div>
+          ))
+        )}
       </div>
     </div>
   );
 });
 
-UsersTable.displayName = 'UsersTable';
+UsersTable.displayName = "UsersTable";
