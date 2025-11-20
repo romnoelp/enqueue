@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAuthAndRole } from "@/app/lib/middlewares/auth";
-import { realtimeDb } from "@/app/lib/backend/firebase-admin";
+import { realtimeDb, adminAuth } from "@/app/lib/backend/firebase-admin";
 
 // GET - Get specific user data by UID
 export const GET = async (
@@ -29,7 +29,29 @@ export const GET = async (
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const userData = userSnapshot.val();
+    let userData = userSnapshot.val() as Record<string, any> | null;
+
+    // If realtime DB lacks useful display info, try to enrich from Firebase Auth
+    if (userData) {
+      const hasNameOrEmail = Boolean(
+        userData.name || userData.displayName || userData.email
+      );
+
+      if (!hasNameOrEmail) {
+        try {
+          const authUser = await adminAuth.getUser(uid);
+          if (authUser) {
+            userData = {
+              ...userData,
+              displayName: userData.displayName || authUser.displayName,
+              email: userData.email || authUser.email,
+            };
+          }
+        } catch (err) {
+          // ignore lookup failures and return whatever is in realtime DB
+        }
+      }
+    }
 
     return NextResponse.json({ userData });
   } catch (error) {

@@ -1,25 +1,6 @@
 import { RefObject, useEffect } from "react";
 
-function isEventInsideNode(event: Event, node: Node | null) {
-  if (!node) return false;
-  // Prefer composedPath when available (works with Shadow DOM & portals)
-  const path = (event as any).composedPath?.() as EventTarget[] | undefined;
-  if (path && path.length > 0) {
-    return (
-      path.includes(node as unknown as EventTarget) ||
-      path.some((n) => n === node)
-    );
-  }
-
-  // Fallback: walk up from event.target
-  let target = event.target as Node | null;
-  while (target) {
-    if (target === node) return true;
-    // @ts-ignore
-    target = target.parentNode || null;
-  }
-  return false;
-}
+type ComposedPathable = { composedPath?: () => EventTarget[] };
 
 function useClickOutside<T extends HTMLElement>(
   ref: RefObject<T>,
@@ -31,24 +12,34 @@ function useClickOutside<T extends HTMLElement>(
       if (!ref || !ref.current) return;
 
       // Use composedPath to check whether any node in the path is the container
-      const path = (event as any).composedPath?.() as EventTarget[] | undefined;
+      const path = (event as unknown as ComposedPathable).composedPath?.();
       if (path) {
         if (path.includes(ref.current)) return;
 
-        // Also ignore clicks inside Radix portals used by Select (they render outside the dialog).
-        // Our Select adds `data-slot="select-content"` to the content element, so treat those as inside.
+        // Also ignore clicks inside Radix portals used by Select or nested dialogs (they render outside the dialog).
+        // Our Select adds `data-slot="select-content"` and Dialog content comes from portals too.
+        // Treat elements with `data-slot` starting with `select` or `dialog` as inside.
         for (const node of path) {
           try {
-            if (
-              node &&
-              // @ts-ignore
-              node.getAttribute &&
-              // @ts-ignore
-              String(node.getAttribute("data-slot")).startsWith("select")
-            ) {
+            // Only Element nodes have attributes
+            if (!node || !(node instanceof Element)) continue;
+
+            // If the element has a `data-slot` marker for select/dialog-like portals,
+            // consider the click inside. Some portals use prefixes like `dialog`,
+            // `alert-dialog` or `select`.
+            const slot = String(node.getAttribute("data-slot") || "");
+            if (slot.startsWith("select") || slot.includes("dialog")) {
               return;
             }
-          } catch (e) {
+
+            // Also treat explicit dialog elements (role/aria-modal) as inside clicks
+            // to handle third-party/alternate portal implementations.
+            const role = String(node.getAttribute("role") || "");
+            const ariaModal = String(node.getAttribute("aria-modal") || "");
+            if (role === "dialog" || ariaModal === "true") {
+              return;
+            }
+          } catch {
             // ignore non-elements
           }
         }

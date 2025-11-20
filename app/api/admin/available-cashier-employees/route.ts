@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAuthAndRole } from "@/app/lib/middlewares/auth";
-import { realtimeDb } from "@/app/lib/backend/firebase-admin";
+import { realtimeDb, adminAuth } from "@/app/lib/backend/firebase-admin";
 
 // GET - Get available cashier employees (not assigned to counters)
 export const GET = async (req: NextRequest) => {
@@ -32,17 +32,46 @@ export const GET = async (req: NextRequest) => {
     >;
 
     // Filter users who are cashiers and not assigned to a counter
-    const availableCashiers = Object.entries(usersData)
-      .filter(([, userData]) => {
-        const role = userData.neuQueueAppRoles?.[0] || userData.role;
-        return role === "cashier" && !userData.counterID;
+    const candidateEntries = Object.entries(usersData).filter(([, userData]) => {
+      const role = userData.neuQueueAppRoles?.[0] || userData.role;
+      return role === "cashier" && !userData.counterID;
+    });
+
+    // Enrich entries with readable names. If Realtime DB lacks a name/email,
+    // attempt to fetch the Firebase Auth user record for displayName/email.
+    const enriched = await Promise.all(
+      candidateEntries.map(async ([uid, userData]) => {
+        let email = userData.email;
+        let rawName = userData.name || userData.displayName || email;
+
+        if (!rawName) {
+          try {
+            const authUser = await adminAuth.getUser(uid);
+            if (authUser) {
+              rawName = authUser.displayName || authUser.email || undefined;
+              email = email || authUser.email;
+            }
+          } catch {
+            // ignore individual lookup failures and fall back to uid
+          }
+        }
+
+        const name = rawName
+          ? String(rawName).includes("@")
+            ? String(rawName).split("@")[0]
+            : String(rawName)
+          : uid;
+
+        return {
+          uid,
+          email,
+          name,
+          role: userData.neuQueueAppRoles?.[0] || userData.role,
+        };
       })
-      .map(([uid, userData]) => ({
-        uid,
-        email: userData.email,
-        name: userData.name || userData.displayName,
-        role: userData.neuQueueAppRoles?.[0] || userData.role,
-      }));
+    );
+
+    const availableCashiers = enriched.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
     return NextResponse.json({ availableCashiers });
   } catch (error) {

@@ -110,7 +110,7 @@ export const StationMorphingDialogTest = ({
         <MorphingDialogContent
           className={`p-4 rounded-lg pointer-events-auto relative flex h-auto w-full flex-col overflow-hidden border border-zinc-950/10 bg-white dark:border-zinc-50/10 dark:bg-zinc-900 ${
             activeTab === "counters"
-              ? "h-[680px] w-[700px] sm:h-[720px] sm:w-[760px]"
+              ? "h-[680px] w-[700px] sm:h-[660px] sm:w-[760px]"
               : "sm:h-[530px] sm:w-[530px]"
           }`}
         >
@@ -167,7 +167,10 @@ export const StationMorphingDialogTest = ({
               />
             </TabsContent>
             <TabsContent value="counters" className="w-full">
-              <CounterContent />
+              <CounterContent
+                stationId={currentStation?.id}
+                onCreated={onRefresh}
+              />
             </TabsContent>
           </Tabs>
           <MorphingDialogClose className="text-zinc-50" />

@@ -31,8 +31,8 @@ const Stations = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStations = async () => {
-    setLoading(true);
+  const fetchStations = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const res = await apiFetch<unknown>("/station/get");
       const raw = parseStationsResponse(res);
@@ -48,7 +48,7 @@ const Stations = () => {
     } catch (err: unknown) {
       setError((err as { message?: string })?.message ?? String(err));
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -75,7 +75,7 @@ const Stations = () => {
         {!loading && !error && (
           <StationsGrid
             items={stations ?? []}
-            onRefresh={() => void fetchStations()}
+            onRefresh={() => void fetchStations(false)}
           />
         )}
       </div>
