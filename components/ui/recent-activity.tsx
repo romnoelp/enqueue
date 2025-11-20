@@ -170,6 +170,21 @@ export const RecentActivity = memo(() => {
 
             const { Icon, color, bg } = getMeta();
 
+            const userLabel = (() => {
+              const v =
+                activity.displayName ??
+                activity.email ??
+                activity.uid ??
+                activity.details?.user;
+              if (v === undefined || v === null) return "system";
+              if (typeof v === "string") return v;
+              try {
+                return String(v);
+              } catch {
+                return "system";
+              }
+            })();
+
             return (
               <motion.div
                 key={activity.id ?? index}
@@ -184,11 +199,7 @@ export const RecentActivity = memo(() => {
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-medium">{activity.action}</div>
                   <div className="text-muted-foreground truncate text-xs">
-                    {activity.displayName ??
-                      activity.email ??
-                      activity.uid ??
-                      activity.details?.user ??
-                      "system"}
+                    {userLabel}
                   </div>
                 </div>
                 <div className="text-muted-foreground text-xs flex items-center gap-1">
