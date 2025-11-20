@@ -18,6 +18,7 @@ import { apiFetch } from "@/app/lib/backend/api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DetailContent from "./DetailContent";
 import FlipCard from "./FlipCard";
+import CounterContent from "./CounterContent";
 
 export const StationMorphingDialogTest = ({
   station,
@@ -32,6 +33,7 @@ export const StationMorphingDialogTest = ({
     StationListItem | undefined
   >(station);
   const [loadingInitialData, setLoadingInitialData] = useState<boolean>(true);
+  const [activeTab, setActiveTab] = useState<string>("details");
 
   useEffect(() => {
     const abort = { aborted: false };
@@ -71,7 +73,9 @@ export const StationMorphingDialogTest = ({
             activated: found.activated,
           });
           // Update local station display with freshest data
-          setCurrentStation((prev) => ({ ...(prev ?? {}), ...found } as any));
+          setCurrentStation(
+            (prev) => ({ ...(prev ?? {}), ...found } as StationListItem)
+          );
         } else {
           if (!station) setInitialData(null);
         }
@@ -103,8 +107,18 @@ export const StationMorphingDialogTest = ({
       />
 
       <MorphingDialogContainer>
-        <MorphingDialogContent className="p-4 rounded-lg pointer-events-auto relative flex h-auto w-full flex-col overflow-hidden border border-zinc-950/10 bg-white dark:border-zinc-50/10 dark:bg-zinc-900 sm:h-[530px] sm:w-[530px]">
-          <Tabs defaultValue="" className="h-full flex flex-col items-center">
+        <MorphingDialogContent
+          className={`p-4 rounded-lg pointer-events-auto relative flex h-auto w-full flex-col overflow-hidden border border-zinc-950/10 bg-white dark:border-zinc-50/10 dark:bg-zinc-900 ${
+            activeTab === "counters"
+              ? "h-[680px] w-[700px] sm:h-[720px] sm:w-[760px]"
+              : "sm:h-[530px] sm:w-[530px]"
+          }`}
+        >
+          <Tabs
+            value={activeTab}
+            onValueChange={(v) => setActiveTab(v)}
+            className="h-full flex flex-col items-center"
+          >
             <TabsList className="details">
               <TabsTrigger className="w-xs" value="details">
                 Details
@@ -135,19 +149,16 @@ export const StationMorphingDialogTest = ({
                     // Update the dialog's initial data and the local station
                     setInitialData((prev) => ({ ...(prev ?? {}), ...payload }));
                     setCurrentStation(
-                      (prev) => ({ ...(prev ?? {}), ...payload } as any)
+                      (prev) =>
+                        ({ ...(prev ?? {}), ...payload } as StationListItem)
                     );
 
-                    // Attempt to close the dialog by clicking the close button
-                    // rendered by `MorphingDialogClose` (aria-label="Close dialog").
                     try {
                       const closeBtn = document.querySelector(
                         'button[aria-label="Close dialog"]'
                       ) as HTMLButtonElement | null;
                       if (closeBtn) closeBtn.click();
-                    } catch (err) {
-                      // best-effort; ignore
-                    }
+                    } catch {}
                   } catch (err) {
                     console.error("Failed to save station", err);
                     throw err;
@@ -155,7 +166,9 @@ export const StationMorphingDialogTest = ({
                 }}
               />
             </TabsContent>
-            <TabsContent value="counters">counters</TabsContent>
+            <TabsContent value="counters" className="w-full">
+              <CounterContent />
+            </TabsContent>
           </Tabs>
           <MorphingDialogClose className="text-zinc-50" />
         </MorphingDialogContent>
