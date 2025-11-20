@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-// Station tiles are rendered by `StationsGrid` component.
 import BounceLoader from "@/components/mvpblocks/bouncing-loader";
 import { apiFetch } from "@/app/lib/backend/api";
 import { parseStationsResponse } from "@/lib/backend/parse-stations";
@@ -17,10 +16,6 @@ type Station = {
   activated?: boolean;
 };
 
-// parseStationsResponse is moved to `lib/backend/parse-stations` and will
-// return an array of raw station-like objects; we map them below into the
-// local `Station` shape where necessary.
-
 const LoadingState = () => (
   <div className="h-full flex items-center justify-center">
     <BounceLoader />
@@ -30,8 +25,6 @@ const LoadingState = () => (
 const ErrorState = ({ message }: { message: string | null }) => (
   <div className="text-red-500">Error loading stations: {message}</div>
 );
-
-// `StationsGrid` extracted to `components/stations/StationsGrid`.
 
 const Stations = () => {
   const [stations, setStations] = useState<Station[] | null>(null);

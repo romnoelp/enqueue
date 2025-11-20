@@ -26,10 +26,15 @@ export const StationMorphingDialogTest = ({
 }) => {
   const title = station?.name ?? "New Station";
   const [initialData, setInitialData] = useState<StationInitialData>(null);
+  const [currentStation, setCurrentStation] = useState<
+    StationListItem | undefined
+  >(station);
   const [loadingInitialData, setLoadingInitialData] = useState<boolean>(true);
 
   useEffect(() => {
     const abort = { aborted: false };
+    setCurrentStation(station);
+
     if (station) {
       setInitialData({
         name: station.name ?? "",
@@ -63,6 +68,8 @@ export const StationMorphingDialogTest = ({
             type: found.type as unknown as ImportedStation["type"],
             activated: found.activated,
           });
+          // Update local station display with freshest data
+          setCurrentStation((prev) => ({ ...(prev ?? {}), ...found } as any));
         } else {
           if (!station) setInitialData(null);
         }
@@ -87,7 +94,10 @@ export const StationMorphingDialogTest = ({
         duration: 0.25,
       }}
     >
-      <FlipCard station={station} title={title} />
+      <FlipCard
+        station={currentStation}
+        title={currentStation?.name ?? title}
+      />
 
       <MorphingDialogContainer>
         <MorphingDialogContent className="p-4 rounded-lg pointer-events-auto relative flex h-auto w-full flex-col overflow-hidden border border-zinc-950/10 bg-white dark:border-zinc-50/10 dark:bg-zinc-900 sm:h-[530px] sm:w-[530px]">
@@ -105,15 +115,36 @@ export const StationMorphingDialogTest = ({
                 loading={loadingInitialData}
                 onSave={async (payload: StationInitialData) => {
                   try {
+                    if (!station?.id) throw new Error("Station ID is missing");
 
-                    const body = { id: station?.id, ...(payload ?? {}) };
-                    await apiFetch("/station/update", {
-                      method: "POST",
-                      body: JSON.stringify(body),
-                      headers: { "Content-Type": "application/json" },
-                    });
+                    const body = { ...(payload ?? {}) };
+                    await apiFetch(
+                      `/station/update/${encodeURIComponent(
+                        String(station.id)
+                      )}`,
+                      {
+                        method: "PUT",
+                        body: JSON.stringify(body),
+                        headers: { "Content-Type": "application/json" },
+                      }
+                    );
 
+                    // Update the dialog's initial data and the local station
                     setInitialData((prev) => ({ ...(prev ?? {}), ...payload }));
+                    setCurrentStation(
+                      (prev) => ({ ...(prev ?? {}), ...payload } as any)
+                    );
+
+                    // Attempt to close the dialog by clicking the close button
+                    // rendered by `MorphingDialogClose` (aria-label="Close dialog").
+                    try {
+                      const closeBtn = document.querySelector(
+                        'button[aria-label="Close dialog"]'
+                      ) as HTMLButtonElement | null;
+                      if (closeBtn) closeBtn.click();
+                    } catch (err) {
+                      // best-effort; ignore
+                    }
                   } catch (err) {
                     console.error("Failed to save station", err);
                     throw err;

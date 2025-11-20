@@ -65,8 +65,12 @@ const FlipCard = ({ station, title }: Props) => {
                   </div>
 
                   <h3
-                    className="font-sans font-semibold leading-tight"
-                    style={{ fontSize: "clamp(0.8rem, 2.5vw, 1.125rem)" }}
+                    className="font-sans font-semibold leading-tight truncate"
+                    title={title}
+                    style={{
+                      fontSize: "clamp(0.8rem, 2.5vw, 1.125rem)",
+                      maxWidth: "100%",
+                    }}
                   >
                     {title}
                   </h3>
