@@ -1,14 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import type { VariantProps } from "class-variance-authority";
 import { Spinner } from "@/components/ui/spinner";
 
 type Props = {
   children?: React.ReactNode;
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
   disabled?: boolean;
-  size?: "sm" | "md" | "lg";
+  size?: VariantProps<typeof buttonVariants>["size"];
 };
 
 export function ButtonLoading({

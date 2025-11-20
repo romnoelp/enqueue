@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { verifyAuthAndRole } from "@/app/lib/middlewares/auth";
 import { realtimeDb, adminAuth } from "@/app/lib/backend/firebase-admin";
 
 // GET - Get available cashier employees (not assigned to counters)
-export const GET = async (req: NextRequest) => {
+export const GET = async () => {
   // Verify authentication and admin/superAdmin role
   const authResult = await verifyAuthAndRole( ["admin", "superAdmin"]);
   if (!authResult.success) {

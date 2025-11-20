@@ -29,7 +29,7 @@ export const GET = async (
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    let userData = userSnapshot.val() as Record<string, any> | null;
+    let userData = userSnapshot.val() as Record<string, unknown> | null;
 
     // If realtime DB lacks useful display info, try to enrich from Firebase Auth
     if (userData) {
@@ -47,7 +47,7 @@ export const GET = async (
               email: userData.email || authUser.email,
             };
           }
-        } catch (err) {
+        } catch {
           // ignore lookup failures and return whatever is in realtime DB
         }
       }

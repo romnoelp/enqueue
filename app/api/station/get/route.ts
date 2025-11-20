@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { verifyAuthAndRole } from "@/app/lib/middlewares/auth";
 import { realtimeDb } from "@/app/lib/backend/firebase-admin";
 import { CashierType } from "@/types";
 
 // GET - Get all stations
-export const GET = async (req: NextRequest) => {
+export const GET = async () => {
   const authResult = await verifyAuthAndRole( ["admin", "superAdmin"]);
   if (!authResult.success) {
     return authResult.response;

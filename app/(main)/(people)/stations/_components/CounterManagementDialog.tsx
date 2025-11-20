@@ -20,16 +20,9 @@ import {
   AlertDialogCancel,
 } from "@/components/animate-ui/components/radix/alert-dialog";
 
-type Counter = {
-  id: string;
-  name?: string;
-  assignedEmail?: string | null;
-};
-
 type Props = {
   open: boolean;
   setOpen: (v: boolean) => void;
-  counter: Counter;
   onAssign: () => Promise<void> | void;
   onUnassign: () => Promise<void> | void;
   onDelete: () => Promise<void> | void;
@@ -39,7 +32,6 @@ type Props = {
 export default function CounterManagementDialog({
   open,
   setOpen,
-  counter,
   onAssign,
   onUnassign,
   onDelete,

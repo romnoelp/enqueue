@@ -6,9 +6,9 @@ import { RecentActivity } from "@/components/ui/recent-activity";
 import { RevenueChart } from "@/components/ui/revenue-chart";
 import { SystemStatus } from "@/components/ui/system-status";
 import { UsersTable } from "@/components/ui/users-table";
-import { useState, useEffect } from "react";
+import "react";
 import { Users, Activity, DollarSign, Eye } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 const Dashboard = () => {
   const stats = [
     {
@@ -48,19 +48,6 @@ const Dashboard = () => {
       bgColor: "bg-orange-500/10",
     },
   ];
-
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsRefreshing(false);
-  };
-
-  const handleExport = () => {
-    console.log("Exporting data...");
-  };
 
   const handleAddUser = () => {
     console.log("Adding new user...");

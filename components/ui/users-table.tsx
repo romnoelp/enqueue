@@ -83,6 +83,7 @@ export const UsersTable = memo(({ onAddUser }: UsersTableProps) => {
           >
             <div className="flex w-full items-center gap-4 sm:w-auto">
               <div className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={user.avatar}
                   alt={user.name}
