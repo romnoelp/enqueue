@@ -3,6 +3,9 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/animate-ui/components/radix/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -12,10 +15,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/animate-ui/components/radix/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Magnetic } from "@/components/motion-primitives/magnetic";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/animate-ui/components/radix/checkbox";
 import {
   Select,
   SelectContent,
@@ -23,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Magnetic } from "@/components/motion-primitives/magnetic";
 import { apiFetch } from "@/app/lib/backend/api";
 import { toast } from "sonner";
 
@@ -30,7 +30,14 @@ type Props = {
   onCreated?: () => void;
 };
 
-const AddStationDialog = ({ onCreated }: Props) => {
+const STATION_TYPES = [
+  { value: "auditing", label: "Auditing" },
+  { value: "clinic", label: "Clinic" },
+  { value: "payment", label: "Payment" },
+  { value: "registrar", label: "Registrar" },
+] as const;
+
+export default function AddStationDialog({ onCreated }: Props) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -47,109 +54,131 @@ const AddStationDialog = ({ onCreated }: Props) => {
 
   const handleCreate = async () => {
     if (isCreating) return;
+
     setIsCreating(true);
     try {
       const payload = {
-        name,
-        description,
+        name: name.trim(),
+        description: description.trim(),
         type: typeValue,
         activated,
       };
 
       await apiFetch("/station/add", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      toast.success("Station created");
+      toast.success("Station created successfully");
       setOpen(false);
       resetForm();
-      if (onCreated) onCreated();
+      onCreated?.();
     } catch (err) {
-      console.error("Create station failed", err);
+      console.error("Failed to create station:", err);
       toast.error((err as Error).message || "Failed to create station");
     } finally {
       setIsCreating(false);
     }
   };
 
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      resetForm();
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button onClick={() => setOpen(true)}>Add Station</Button>
+        <Button>Add Station</Button>
       </DialogTrigger>
 
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add a new station</DialogTitle>
-          <DialogDescription>Input the necessary details</DialogDescription>
+          <DialogDescription>
+            Fill in the details below to create a new station.
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div>
+        <div className="space-y-4 py-4">
+          {/* Name */}
+          <div className="space-y-2">
             <Label htmlFor="stationName" className="font-semibold">
               Name
             </Label>
             <Input
               id="stationName"
-              placeholder="Station Name"
-              className="mt-1 mb-2 w-full"
+              placeholder="Enter station name"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              disabled={isCreating}
             />
           </div>
 
-          <div>
+          {/* Description */}
+          <div className="space-y-2">
             <Label htmlFor="stationDescription" className="font-semibold">
               Description
             </Label>
             <Textarea
               id="stationDescription"
-              placeholder="Station Description"
-              className="mt-1 mb-2 w-full"
+              placeholder="Describe this station (optional)"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              disabled={isCreating}
+              rows={3}
             />
           </div>
 
-          <div className="flex items-center gap-x-4">
-            <div>
+          {/* Type + Activated */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+            <div className="space-y-2 flex-1">
               <Label htmlFor="stationType" className="font-semibold">
                 Station Type
               </Label>
-              <Select value={typeValue} onValueChange={setTypeValue}>
-                <SelectTrigger id="stationType" className="w-[180px] mt-1">
-                  <SelectValue placeholder="Select station type" />
+              <Select
+                value={typeValue}
+                onValueChange={setTypeValue}
+                disabled={isCreating}
+              >
+                <SelectTrigger id="stationType" className="w-full sm:w-[200px]">
+                  <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="auditing">Auditing</SelectItem>
-                  <SelectItem value="clinic">Clinic</SelectItem>
-                  <SelectItem value="payment">Payment</SelectItem>
-                  <SelectItem value="registrar">Registrar</SelectItem>
+                  {STATION_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <Label className="flex items-center gap-x-3">
+            <Label className="flex items-center gap-3 cursor-pointer">
               <Checkbox
                 checked={activated}
-                onCheckedChange={(v: boolean) => setActivated(Boolean(v))}
+                onCheckedChange={(checked) => setActivated(!!checked)}
+                disabled={isCreating}
               />
-              <span className="select-none">Activated</span>
+              <span className="select-none font-medium">Activated</span>
             </Label>
           </div>
         </div>
 
         <DialogFooter>
           <Magnetic>
-            <Button disabled={isCreating} onClick={() => void handleCreate()}>
-              {isCreating ? "Creating..." : "Create"}
+            <Button
+              onClick={handleCreate}
+              disabled={isCreating || !name.trim() || !typeValue}
+            >
+              {isCreating ? "Creating..." : "Create Station"}
             </Button>
           </Magnetic>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-};
-
-export default AddStationDialog;
+}
