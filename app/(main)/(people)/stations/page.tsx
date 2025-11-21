@@ -61,8 +61,8 @@ const Stations = () => {
   }, []);
 
   return (
-    <div className="p-6 h-full flex flex-col gap-y-4">
-      <div className="flex gap-x-4 p-4">
+    <div className="p-4 h-full flex flex-col gap-y-4">
+      <div className="flex gap-x-4">
         <Input
           placeholder="Main Building..."
           className="text-muted-foreground w-92"
