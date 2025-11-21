@@ -18,19 +18,11 @@ const DashboardLayoutClient = ({
     console.log("Refresh");
   };
 
-  const handleExport = () => {
-    console.log("Export");
-  };
-
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
       <AdminSidebar />
       <SidebarInset>
-        <DashboardHeader
-          onRefresh={handleRefresh}
-          onExport={handleExport}
-          isRefreshing={false}
-        />
+        <DashboardHeader onRefresh={handleRefresh} isRefreshing={false} />
         {children}
       </SidebarInset>
     </SidebarProvider>

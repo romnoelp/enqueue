@@ -18,7 +18,7 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
 } from "@/components/ui/breadcrumb";
-import { Bell, Filter, RefreshCw, MoreHorizontal } from "lucide-react";
+import { Filter, RefreshCw, MoreHorizontal } from "lucide-react";
 import { Avatar } from "./avatar";
 import { AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { signOut, useSession } from "next-auth/react";
@@ -82,9 +82,7 @@ export const DashboardHeader = memo(
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button variant="outline" size="sm">
-              <Bell className="h-4 w-4" />
-            </Button>
+            {/* notifications removed */}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
