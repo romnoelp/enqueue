@@ -35,7 +35,10 @@ const DashboardLayoutClient = ({
     <SidebarProvider defaultOpen={defaultOpen}>
       <AdminSidebar />
       <SidebarInset>
-        <DashboardHeader onRefresh={handleRefresh} isRefreshing={isRefreshing} />
+        <DashboardHeader
+          onRefresh={handleRefresh}
+          isRefreshing={isRefreshing}
+        />
         {children}
       </SidebarInset>
     </SidebarProvider>
