@@ -1,9 +1,10 @@
-import { UserRole } from "./auth";
+import { AuthUser, EmployeeRole } from "./auth";
 
-interface Employee {
-  uid?: string;
+// Employee extends authenticated user with required fields we rely on in UI and APIs
+interface Employee extends AuthUser {
+  uid: string;
   name: string;
-  role: UserRole;
+  role: EmployeeRole;
   email: string;
 }
 

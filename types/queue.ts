@@ -1,11 +1,10 @@
 export interface QueueTokenPayload {
   id: string;
   type: TokenType;
-  queueID?: string; // For queue-status tokens (e.g., "R001")
-  stationID?: string; // For queue-status tokens
-  email?: string; // For queue-status tokens
-  access?: boolean; // For permission tokens
-  [key: string]: unknown;
+  queueID?: string; 
+  stationID?: string;
+  email?: string; 
+  access?: boolean; 
 }
 
 export type TokenType = "permission" | "queue-form" | "queue-status";

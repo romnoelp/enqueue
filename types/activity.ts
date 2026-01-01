@@ -1,4 +1,3 @@
-// Action types with const assertion (zero runtime cost)
 export const ACTION_TYPES = {
   LOG_IN: "LOG_IN",
   LOG_OUT: "LOG_OUT",
