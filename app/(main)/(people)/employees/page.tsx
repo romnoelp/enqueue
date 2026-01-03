@@ -170,6 +170,7 @@ const Employee = () => {
                       name={employee.name}
                       email={employee.email}
                       role={employee.role}
+                      uid={employee.uid}
                     />
                   </motion.button>
                 ))}
