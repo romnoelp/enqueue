@@ -2,14 +2,26 @@ import { apiFetch } from "@/app/lib/backend/api";
 
 export type CounterApiItem = {
   id?: string | number;
-  counterNumber?: number;
-  uid?: string | null;
+  number?: number;
+  stationId?: string | number;
+  cashierUid?: string | null;
 };
 
 export async function fetchCountersApi(stationId: string | number) {
-  return apiFetch<{ counterList?: Array<CounterApiItem> }>(
-    `/counter/get/${encodeURIComponent(String(stationId))}`
+  const data = await apiFetch<{ counters?: Array<CounterApiItem>; nextCursor?: string | null }>(
+    `/counters/counters`,
+    {
+      query: { stationId: String(stationId), limit: 200 },
+    }
   );
+
+  const counters = Array.isArray(data?.counters) ? data.counters : [];
+  // Backend currently does not reliably filter by stationId, so filter client-side.
+  const filtered = counters.filter(
+    (counter) => String(counter.stationId ?? "") === String(stationId)
+  );
+
+  return { counterList: filtered, nextCursor: data?.nextCursor ?? null };
 }
 
 export async function fetchAvailableEmployees() {
@@ -38,23 +50,22 @@ export async function fetchAssignedUserLabels(uidList: string[]) {
 }
 
 export async function createCounterApi(stationId: string | number, counterNumber: number) {
-  return apiFetch<{ counter?: { id?: string; counterNumber?: number } }>(
-    `/counter/add/${encodeURIComponent(String(stationId))}`,
+  return apiFetch<{ message?: string; counter?: CounterApiItem }>(
+    `/counters/counters`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ counterNumber }),
+      body: JSON.stringify({ stationId: String(stationId), number: counterNumber }),
     }
   );
 }
 
 export async function updateCounterApi(
-  stationId: string | number,
   counterId: string | number,
-  body: Record<string, unknown>
+  body: { stationId: string | number; number: number; cashierUid?: string | null }
 ) {
   return apiFetch(
-    `/counter/update/${encodeURIComponent(String(stationId))}/${encodeURIComponent(String(counterId))}`,
+    `/counters/counters/${encodeURIComponent(String(counterId))}`,
     {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -63,9 +74,16 @@ export async function updateCounterApi(
   );
 }
 
-export async function deleteCounterApi(stationId: string | number, counterId: string | number) {
+export async function deleteCounterApi(
+  counterId: string | number,
+  body: { stationId: string | number; number: number; cashierUid?: string | null }
+) {
   return apiFetch(
-    `/counter/delete/${encodeURIComponent(String(stationId))}/${encodeURIComponent(String(counterId))}`,
-    { method: "DELETE" }
+    `/counters/counters/${encodeURIComponent(String(counterId))}`,
+    {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }
   );
 }

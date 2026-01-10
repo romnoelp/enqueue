@@ -44,7 +44,6 @@ export const StationMorphingDialogTest = ({
         name: station.name ?? "",
         description: station.description ?? "",
         type: station.type as unknown as ImportedStation["type"],
-        activated: Boolean(station.activated),
       });
     } else {
       setInitialData(null);
@@ -53,12 +52,16 @@ export const StationMorphingDialogTest = ({
     (async () => {
       if (!abort.aborted) setLoadingInitialData(true);
       try {
-        const res = await fetch("/api/station/get");
-        const data = await res.json();
+        const data = await apiFetch<{
+          stations?: StationApiItem[];
+          cashierLocationList?: StationApiItem[];
+        }>("/stations/stations");
         if (abort.aborted) return;
 
         const list = Array.isArray(data?.cashierLocationList)
           ? data.cashierLocationList
+          : Array.isArray(data?.stations)
+          ? data.stations
           : [];
 
         const found = (list as StationApiItem[]).find(
@@ -70,7 +73,6 @@ export const StationMorphingDialogTest = ({
             name: found.name,
             description: found.description,
             type: found.type as unknown as ImportedStation["type"],
-            activated: found.activated,
           });
           // Update local station display with freshest data
           setCurrentStation(
@@ -110,8 +112,8 @@ export const StationMorphingDialogTest = ({
         <MorphingDialogContent
           className={`p-4 rounded-lg pointer-events-auto relative flex h-auto w-full flex-col overflow-hidden border border-zinc-950/10 bg-white dark:border-zinc-50/10 dark:bg-zinc-900 ${
             activeTab === "counters"
-              ? "h-[680px] w-[700px] sm:h-[660px] sm:w-[760px]"
-              : "sm:h-[530px] sm:w-[530px]"
+              ? "h-170 w-175 sm:h-165 sm:w-190"
+              : "sm:h-132.5 sm:w-132.5"
           }`}
         >
           <Tabs
@@ -136,7 +138,7 @@ export const StationMorphingDialogTest = ({
 
                     const body = { ...(payload ?? {}) };
                     await apiFetch(
-                      `/station/update/${encodeURIComponent(
+                      `/stations/stations/${encodeURIComponent(
                         String(station.id)
                       )}`,
                       {

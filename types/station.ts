@@ -4,7 +4,6 @@ export interface Station {
   name: string;
   description: string;
   type: CashierType;
-  activated: boolean;
 }
 
 export interface Counter {

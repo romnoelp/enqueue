@@ -34,7 +34,7 @@ const FlipCard = ({ station, title, onDeleted }: Props) => {
     setIsDeleting(true);
     try {
       await apiFetch(
-        `/station/delete/${encodeURIComponent(String(station.id))}`,
+        `/stations/delete/${encodeURIComponent(String(station.id))}`,
         { method: "DELETE" }
       );
       toast.success(`${station?.name ?? "Station"} deleted`);

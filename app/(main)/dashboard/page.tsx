@@ -7,6 +7,16 @@ import { UsersTable } from "@/components/ui/users-table";
 import React, { useEffect, useState } from "react";
 import { Users, Activity, Eye, MapPin } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { apiFetch } from "@/app/lib/backend/api";
+import { parseStationsResponse } from "@/lib/backend/parse-stations";
+
+type StationListItem = { id?: string | number };
+
+type CounterApiItem = {
+  stationId?: string | number;
+  cashierUid?: string | null;
+};
+
 const Dashboard = () => {
   const [stats, setStats] = useState([
     {
@@ -57,58 +67,61 @@ const Dashboard = () => {
           Date.now() - 7 * 24 * 60 * 60 * 1000
         ).toISOString();
 
-        const [employeesRes, activitiesRes, stationsRes] = await Promise.all([
-          fetch("/api/admin/employees"),
-          fetch(`/api/admin/get-activity?startDate=${start}&endDate=${end}`),
-          fetch("/api/station/get"),
+        const [employeesJson, activitiesJson, stationsRaw] = await Promise.all([
+          apiFetch<{ employees?: unknown[] }>("/admin/employees").catch(() => ({
+            employees: [],
+          })),
+          apiFetch<{ activities?: unknown[] }>("/admin/get-activity", {
+            query: { startDate: start, endDate: end },
+          }).catch(() => ({
+            activities: [],
+          })),
+          apiFetch<unknown>("/stations/stations").catch(() => null),
         ]);
-
-        const employeesJson = await employeesRes.json().catch(() => ({}));
-        const activitiesJson = await activitiesRes.json().catch(() => ({}));
-        const stationsJson = await stationsRes.json().catch(() => ({}));
 
         const totalEmployees = Array.isArray(employeesJson.employees)
           ? employeesJson.employees.length
           : 0;
 
-        // Number of stations
-        const stationsCount = Array.isArray(stationsJson.cashierLocationList)
-          ? stationsJson.cashierLocationList.length
-          : 0;
+        const stationsList: StationListItem[] = parseStationsResponse(
+          stationsRaw
+        ).map((station) => ({
+          id: (station as Record<string, unknown>).id as
+            | string
+            | number
+            | undefined,
+        }));
+        const stationsCount = stationsList.length;
 
         const activityCount = Array.isArray(activitiesJson.activities)
           ? activitiesJson.activities.length
           : 0;
 
-        // Count active counters (serving or assigned) across all stations
+        // Count active counters across all stations (active = has cashierUid)
         let activeCounters = 0;
-        if (Array.isArray(stationsJson.cashierLocationList)) {
-          const stationsList = stationsJson.cashierLocationList as Array<{
-            id?: string;
-          }>;
-          const counterPromises = stationsList.map((station) =>
-            fetch(`/api/counter/get/${station.id ?? ""}`)
-              .then((r) => r.json())
-              .catch(() => ({}))
+        if (stationsList.length > 0) {
+          const counterPromises = stationsList.map((station: StationListItem) =>
+            apiFetch<{ counters?: CounterApiItem[] }>("/counters/counters", {
+              query: { stationId: station.id ?? "", limit: 200 },
+            }).catch(() => ({ counters: [] }))
           );
 
           const counterResults = await Promise.all(counterPromises);
 
-          for (const res of counterResults) {
-            const list = Array.isArray(res.counterList) ? res.counterList : [];
-            activeCounters += list.filter((c: Record<string, unknown>) => {
-              // counters may have different fields depending on operations
-              const cRec = c as Record<string, unknown>;
-              const servingVal = cRec["serving"];
-              const uidVal = cRec["uid"];
-              const employeeCashier = cRec["employeeCashier"] ?? null;
-              const serving =
-                typeof servingVal === "string" ? servingVal.trim() : "";
-              const uid = typeof uidVal === "string" ? uidVal.trim() : "";
-              return (
-                Boolean(serving) || Boolean(uid) || Boolean(employeeCashier)
-              );
-            }).length;
+          for (let i = 0; i < counterResults.length; i++) {
+            const station = stationsList[i];
+            const res = counterResults[i];
+            const list = Array.isArray(res.counters) ? res.counters : [];
+
+            // Backend currently does not reliably filter by stationId; filter client-side.
+            const stationCounters = list.filter(
+              (c: CounterApiItem) =>
+                String(c.stationId ?? "") === String(station?.id ?? "")
+            );
+
+            activeCounters += stationCounters.filter((c: CounterApiItem) =>
+              Boolean(c.cashierUid)
+            ).length;
           }
         }
 
@@ -153,12 +166,11 @@ const Dashboard = () => {
           },
         ]);
       } catch (err) {
-        // Silently ignore, keep placeholders on error
         console.error("Error fetching dashboard data:", err);
       }
     };
 
-    fetchDashboard();
+    void fetchDashboard();
 
     return () => {
       mounted = false;

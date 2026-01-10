@@ -22,5 +22,12 @@ export default {
       }
       return true // Do different verification for other providers
     },
+    async jwt({ token, account }) {
+      // Persist the Google ID token so the client can exchange it for a Firebase ID token.
+      if (account?.provider === "google" && account.id_token) {
+        (token as typeof token & { googleIdToken?: string }).googleIdToken = account.id_token
+      }
+      return token
+    },
   },
 } satisfies NextAuthConfig

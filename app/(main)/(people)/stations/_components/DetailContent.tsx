@@ -20,7 +20,6 @@ import {
   FlipButtonFront,
   FlipButtonBack,
 } from "@/components/animate-ui/components/buttons/flip";
-import { Switch } from "@/components/animate-ui/components/base/switch";
 import { toast } from "sonner";
 import { apiFetch } from "@/app/lib/backend/api";
 
@@ -38,8 +37,10 @@ const DetailContent = ({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [typeValue, setTypeValue] = useState("");
-  const [activated, setActivated] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  const isValid =
+    Boolean(name.trim()) && Boolean(description.trim()) && Boolean(typeValue);
 
   // Sync local state whenever initialData changes (e.g. when selecting a new station)
   useEffect(() => {
@@ -47,7 +48,6 @@ const DetailContent = ({
       setName("");
       setDescription("");
       setTypeValue("");
-      setActivated(false);
       return;
     }
 
@@ -55,7 +55,6 @@ const DetailContent = ({
       setName(initialData.name ?? "");
       setDescription(initialData.description ?? "");
       setTypeValue(initialData.type ?? "");
-      setActivated(initialData.activated ?? false);
     });
   }, [initialData]);
 
@@ -65,20 +64,22 @@ const DetailContent = ({
     return (
       (initialData.name ?? "") !== name ||
       (initialData.description ?? "") !== description ||
-      String(initialData.type ?? "") !== typeValue ||
-      (initialData.activated ?? false) !== activated
+      String(initialData.type ?? "") !== typeValue
     );
-  }, [initialData, name, description, typeValue, activated]);
+  }, [initialData, name, description, typeValue]);
 
   const handleSave = async () => {
     if (isSaving || !isDirty) return;
+    if (!isValid) {
+      toast.error("Name, description, and station type are required");
+      return;
+    }
 
     setIsSaving(true);
     const payload = {
-      name,
-      description,
+      name: name.trim(),
+      description: description.trim(),
       type: typeValue as Station["type"],
-      activated,
     };
 
     try {
@@ -96,7 +97,7 @@ const DetailContent = ({
       }
 
       await apiFetch(
-        `/station/update/${encodeURIComponent(String(stationID))}`,
+        `/stations/stations/${encodeURIComponent(String(stationID))}`,
         {
           method: "PUT",
           body: JSON.stringify(payload),
@@ -163,36 +164,27 @@ const DetailContent = ({
           />
         </div>
 
-        {/* Station Type & Activated Toggle */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="space-y-2 sm:w-64">
-            <Label className="font-semibold">Station Type</Label>
-            <Select value={typeValue} onValueChange={setTypeValue}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a station type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="auditing">Auditing</SelectItem>
-                  <SelectItem value="clinic">Clinic</SelectItem>
-                  <SelectItem value="payment">Payment</SelectItem>
-                  <SelectItem value="registrar">Registrar</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center">
-            <Label className="flex items-center gap-x-3 cursor-pointer">
-              <Switch checked={activated} onCheckedChange={setActivated} />
-              <span className="text-sm font-medium">Activated</span>
-            </Label>
-          </div>
+        {/* Station Type */}
+        <div className="space-y-2 sm:w-64">
+          <Label className="font-semibold">Station Type</Label>
+          <Select value={typeValue} onValueChange={setTypeValue}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a station type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="auditing">Auditing</SelectItem>
+                <SelectItem value="clinic">Clinic</SelectItem>
+                <SelectItem value="payment">Payment</SelectItem>
+                <SelectItem value="registrar">Registrar</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex justify-end pt-4">
           {isDirty && !isSaving && (
-            <FlipButton disabled={isSaving}>
+            <FlipButton disabled={isSaving || !isValid}>
               <FlipButtonFront size="lg" variant="outline">
                 Hover to keep changes!
               </FlipButtonFront>

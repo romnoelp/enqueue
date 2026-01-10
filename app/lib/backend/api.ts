@@ -21,7 +21,9 @@ const resolveUrl = (endpoint: string) => {
     return endpoint;
   }
 
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api";
+  // Use same-origin proxy by default to avoid CORS when calling Firebase Functions.
+  const envBase = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const base = envBase && !/^https?:/i.test(envBase) ? envBase : "/api/backend";
   const normalizedBase = base.endsWith("/") ? base.slice(0, -1) : base;
   const normalizedPath = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
 
@@ -39,6 +41,52 @@ export class ApiError extends Error {
     this.payload = payload;
   }
 }
+
+let cachedFirebaseIdToken: string | null = null;
+let cachedFirebaseIdTokenFetchedAt = 0;
+
+const maybeGetFirebaseIdToken = async (): Promise<string | null> => {
+  // Server-side requests should not try to use browser auth.
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  // Best-effort caching: avoid calling getSession/getIdToken on every request.
+  // Firebase ID tokens are valid for ~1 hour, but refreshes are handled by the SDK.
+  if (cachedFirebaseIdToken && Date.now() - cachedFirebaseIdTokenFetchedAt < 5 * 60 * 1000) {
+    return cachedFirebaseIdToken;
+  }
+
+  try {
+    const [{ auth }, { GoogleAuthProvider, signInWithCredential }, { getSession }] = await Promise.all([
+      import("./firebase"),
+      import("firebase/auth"),
+      import("next-auth/react"),
+    ]);
+
+    if (auth.currentUser) {
+      const token = await auth.currentUser.getIdToken();
+      cachedFirebaseIdToken = token;
+      cachedFirebaseIdTokenFetchedAt = Date.now();
+      return token;
+    }
+
+    const session = await getSession();
+    const googleIdToken = session?.googleIdToken;
+    if (!googleIdToken) {
+      return null;
+    }
+
+    const credential = GoogleAuthProvider.credential(googleIdToken);
+    const result = await signInWithCredential(auth, credential);
+    const token = await result.user.getIdToken();
+    cachedFirebaseIdToken = token;
+    cachedFirebaseIdTokenFetchedAt = Date.now();
+    return token;
+  } catch {
+    return null;
+  }
+};
 
 // Fetch wrapper for API routes with Better Auth cookie-based sessions
 export const apiFetch = async <T = unknown>(
@@ -59,6 +107,13 @@ export const apiFetch = async <T = unknown>(
 
   if (!requestHeaders.has("Accept")) {
     requestHeaders.set("Accept", "application/json");
+  }
+
+  if (!requestHeaders.has("Authorization")) {
+    const firebaseIdToken = await maybeGetFirebaseIdToken();
+    if (firebaseIdToken) {
+      requestHeaders.set("Authorization", `Bearer ${firebaseIdToken}`);
+    }
   }
 
   let requestBody: BodyInit | undefined = body as BodyInit | undefined;

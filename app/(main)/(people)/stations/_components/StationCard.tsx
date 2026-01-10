@@ -4,7 +4,7 @@ const StationCard = () => {
   const Icon = Info;
 
   return (
-    <div className="w-full max-w-sm h-[200px]">
+    <div className="w-full max-w-sm h-50">
       <div className="scale-in group visible cursor-pointer h-full">
         <div
           className={`

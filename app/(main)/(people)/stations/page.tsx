@@ -13,7 +13,6 @@ type Station = {
   name?: string;
   role?: string;
   email?: string;
-  activated?: boolean;
 };
 
 const LoadingState = () => (
@@ -34,14 +33,13 @@ const Stations = () => {
   const fetchStations = async (showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
-      const res = await apiFetch<unknown>("/station/get");
+      const res = await apiFetch<unknown>("/stations/stations");
       const raw = parseStationsResponse(res);
       const list = raw.map((rawItem) => ({
         id: (rawItem.id ?? rawItem.uid ?? "") as string,
         name: (rawItem.name ?? "") as string,
         role: (rawItem.type ?? rawItem.role ?? "") as string,
         email: (rawItem.description ?? rawItem.email ?? "") as string,
-        activated: Boolean(rawItem.activated ?? rawItem.active ?? false),
       }));
       setStations(list);
       setError(null);

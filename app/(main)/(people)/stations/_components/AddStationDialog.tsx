@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/animate-ui/components/radix/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -42,18 +41,23 @@ export default function AddStationDialog({ onCreated }: Props) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [typeValue, setTypeValue] = useState("");
-  const [activated, setActivated] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+
+  const isValid =
+    Boolean(name.trim()) && Boolean(description.trim()) && Boolean(typeValue);
 
   const resetForm = () => {
     setName("");
     setDescription("");
     setTypeValue("");
-    setActivated(false);
   };
 
   const handleCreate = async () => {
     if (isCreating) return;
+    if (!name.trim() || !description.trim() || !typeValue) {
+      toast.error("Name, description, and station type are required");
+      return;
+    }
 
     setIsCreating(true);
     try {
@@ -61,10 +65,9 @@ export default function AddStationDialog({ onCreated }: Props) {
         name: name.trim(),
         description: description.trim(),
         type: typeValue,
-        activated,
       };
 
-      await apiFetch("/station/add", {
+      await apiFetch("/stations/stations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -125,7 +128,7 @@ export default function AddStationDialog({ onCreated }: Props) {
             </Label>
             <Textarea
               id="stationDescription"
-              placeholder="Describe this station (optional)"
+              placeholder="Describe this station"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={isCreating}
@@ -133,8 +136,8 @@ export default function AddStationDialog({ onCreated }: Props) {
             />
           </div>
 
-          {/* Type + Activated */}
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+          {/* Type */}
+          <div className="space-y-2">
             <div className="space-y-2 flex-1">
               <Label htmlFor="stationType" className="font-semibold">
                 Station Type
@@ -144,7 +147,7 @@ export default function AddStationDialog({ onCreated }: Props) {
                 onValueChange={setTypeValue}
                 disabled={isCreating}
               >
-                <SelectTrigger id="stationType" className="w-full sm:w-[200px]">
+                <SelectTrigger id="stationType" className="w-full sm:w-50">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -156,24 +159,12 @@ export default function AddStationDialog({ onCreated }: Props) {
                 </SelectContent>
               </Select>
             </div>
-
-            <Label className="flex items-center gap-3 cursor-pointer">
-              <Checkbox
-                checked={activated}
-                onCheckedChange={(checked) => setActivated(!!checked)}
-                disabled={isCreating}
-              />
-              <span className="select-none font-medium">Activated</span>
-            </Label>
           </div>
         </div>
 
         <DialogFooter>
           <Magnetic>
-            <Button
-              onClick={handleCreate}
-              disabled={isCreating || !name.trim() || !typeValue}
-            >
+            <Button onClick={handleCreate} disabled={isCreating || !isValid}>
               {isCreating ? "Creating..." : "Create Station"}
             </Button>
           </Magnetic>
