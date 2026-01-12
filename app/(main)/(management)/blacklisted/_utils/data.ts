@@ -10,6 +10,8 @@ const normalizeBlacklistedResponse = (apiResponse: unknown): Blacklist[] => {
   const users =
     apiResponse && typeof apiResponse === "object" && "blacklist" in (apiResponse as Record<string, unknown>)
       ? ((apiResponse as { blacklist?: unknown }).blacklist as unknown[] | undefined) ?? []
+      : apiResponse && typeof apiResponse === "object" && "data" in (apiResponse as Record<string, unknown>)
+      ? ((apiResponse as { data?: unknown }).data as unknown[] | undefined) ?? []
       : Array.isArray(apiResponse)
       ? (apiResponse as unknown[])
       : [];

@@ -12,7 +12,8 @@ export const useBlacklistedUsers = () => {
   useEffect(() => {
     const fetchBlacklisted = async () => {
       try {
-        const data = await apiFetch("/admin/get-blacklist");
+        // Backend Firebase Functions route: GET /admin/blacklist
+        const data = await apiFetch("/admin/blacklist");
         setBlacklisted(normalizeBlacklistedResponse(data));
       } catch (error) {
         console.error("Failed to load blacklisted users", error);

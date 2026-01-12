@@ -10,7 +10,7 @@ const acceptPendingUser = (userId: string, role: UserRole) =>
 
 // Reject pending user and add to blacklist
 const rejectPendingUser = (email: string) =>
-  apiFetch("/admin/block-email", {
+  apiFetch("/admin/blacklist", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, reason: REJECT_REASON }),

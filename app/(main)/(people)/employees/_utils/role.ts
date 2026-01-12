@@ -2,10 +2,10 @@ import { apiFetch } from "@/app/lib/backend/api";
 import type { UserRole } from "@/types/auth";
 
 export const setEmployeeRole = async (uid: string, role: UserRole) => {
-  return apiFetch<{ message: string }>("/admin/set-role", {
+  return apiFetch<{ message: string }>("/admin/assign-role", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ uid, role }),
+    body: JSON.stringify({ userId: uid, role }),
   });
 };
 

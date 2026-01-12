@@ -10,16 +10,18 @@ export const fetchLogs = async (
   const end = new Date(endDate);
   end.setHours(23, 59, 59, 999);
 
-  const params = new URLSearchParams({
-    startDate: start.toISOString(),
-    endDate: end.toISOString(),
-  });
-
   try {
-    const res = await apiFetch<{ activities: ActivityLog[] }>(
-      `/admin/get-activity?${params}`
+    const res = await apiFetch<{ data?: ActivityLog[] }>(
+      "/admin/activity-logs",
+      {
+        query: {
+          startDate: start.toISOString(),
+          endDate: end.toISOString(),
+        },
+      }
     );
-    return res.activities ?? [];
+
+    return res.data ?? [];
   } catch {
     return [];
   }

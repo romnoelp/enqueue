@@ -2,13 +2,13 @@ import { apiFetch } from "@/app/lib/backend/api";
 
 // Remove email from blacklist
 const unblockEmail = (email: string) =>
-  apiFetch(`/admin/unblock-email/${encodeURIComponent(email)}`, {
+  apiFetch(`/admin/blacklist/${encodeURIComponent(email)}`, {
     method: "DELETE",
   });
 
 // Add email to blacklist with reason
 const blockEmail = (email: string, reason: string) =>
-  apiFetch("/admin/block-email", {
+  apiFetch("/admin/blacklist", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, reason }),

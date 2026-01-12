@@ -3,12 +3,13 @@
 import { memo, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Clock, Activity, User, Download, Settings, Users } from "lucide-react";
+import { apiFetch } from "@/app/lib/backend/api";
 
 type ActivityItem = {
   id?: string;
   uid?: string;
   action?: string;
-  details?: Record<string, unknown>;
+  details?: unknown;
   timestamp?: number;
   displayName?: string;
   email?: string;
@@ -21,8 +22,8 @@ type RawActivity = {
   actor?: string;
   action?: string;
   type?: string;
-  details?: Record<string, unknown>;
-  data?: Record<string, unknown>;
+  details?: unknown;
+  data?: unknown;
   timestamp?: number | string;
 };
 
@@ -60,22 +61,40 @@ export const RecentActivity = memo(() => {
           Date.now() - 7 * 24 * 60 * 60 * 1000
         ).toISOString();
 
-        const res = await fetch(
-          `/api/admin/get-activity?startDate=${start}&endDate=${end}`
-        );
-        const json = await res.json();
-        const items: ActivityItem[] = Array.isArray(json.activities)
-          ? (json.activities as RawActivity[]).map((a) => ({
-              id: a.id,
-              uid: a.uid ?? a.actorUID ?? a.actor ?? undefined,
-              action: a.action ?? String(a.type ?? "action"),
-              details: a.details ?? a.data ?? undefined,
-              timestamp:
-                typeof a.timestamp === "number"
-                  ? a.timestamp
-                  : Number(a.timestamp as string) ?? undefined,
-            }))
+        const json = await apiFetch<{
+          data?: RawActivity[];
+          activities?: RawActivity[];
+        }>("/admin/activity-logs", {
+          query: {
+            startDate: start,
+            endDate: end,
+          },
+        });
+
+        const raw = Array.isArray(json.data)
+          ? json.data
+          : Array.isArray(json.activities)
+          ? json.activities
           : [];
+
+        const items: ActivityItem[] = raw.map((a) => {
+          const timestampRaw = a.timestamp;
+          const ts =
+            typeof timestampRaw === "number"
+              ? timestampRaw
+              : timestampRaw
+              ? Number(timestampRaw)
+              : undefined;
+
+          return {
+            id: a.id,
+            uid: a.uid ?? a.actorUID ?? a.actor ?? undefined,
+            action: a.action ?? String(a.type ?? "action"),
+            details: a.details ?? a.data ?? undefined,
+            timestamp:
+              typeof ts === "number" && Number.isFinite(ts) ? ts : undefined,
+          };
+        });
 
         // Resolve user display names for any unique UIDs returned
         const uniqueUids = Array.from(
@@ -88,12 +107,10 @@ export const RecentActivity = memo(() => {
 
         if (uniqueUids.length > 0) {
           const userFetches = uniqueUids.map((u) =>
-            fetch(`/api/admin/user-data/${encodeURIComponent(u as string)}`)
-              .then((r) => r.json())
-              .then((j) => ({
-                uid: u,
-                data: (j as { userData?: FetchedUserData }).userData ?? null,
-              }))
+            apiFetch<{ data?: FetchedUserData }>(
+              `/admin/users/${encodeURIComponent(u as string)}`
+            )
+              .then((j) => ({ uid: u, data: j?.data ?? null }))
               .catch(() => ({ uid: u, data: null as FetchedUserData }))
           );
 
@@ -196,7 +213,10 @@ export const RecentActivity = memo(() => {
                 activity.displayName ??
                 activity.email ??
                 activity.uid ??
-                activity.details?.user;
+                (typeof activity.details === "object" &&
+                activity.details !== null
+                  ? (activity.details as Record<string, unknown>)?.user
+                  : undefined);
               if (v === undefined || v === null) return "system";
               if (typeof v === "string") return v;
               try {
@@ -205,6 +225,12 @@ export const RecentActivity = memo(() => {
                 return "system";
               }
             })();
+
+            const subtitle =
+              typeof activity.details === "string" &&
+              activity.details.trim().length > 0
+                ? activity.details
+                : userLabel;
 
             return (
               <motion.div
@@ -220,7 +246,7 @@ export const RecentActivity = memo(() => {
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-medium">{activity.action}</div>
                   <div className="text-muted-foreground truncate text-xs">
-                    {userLabel}
+                    {subtitle}
                   </div>
                 </div>
                 <div className="text-muted-foreground text-xs flex items-center gap-1">

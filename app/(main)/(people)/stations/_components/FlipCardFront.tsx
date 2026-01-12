@@ -38,10 +38,10 @@ const FlipCardFront = ({
 
     (async () => {
       try {
-        // Backend route is mounted at /counters with /counters inside the router => /counters/counters
+        // Backend route is mounted at /counters
         // The backend currently ignores stationId filtering, so we filter client-side.
         const data = await apiFetch<{ counters?: CounterApiItem[] }>(
-          "/counters/counters",
+          "/counters",
           {
             query: { stationId: String(stationId), limit: 200 },
           }

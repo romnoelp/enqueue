@@ -30,9 +30,10 @@ const FlipCardBack = ({
     <div className="absolute inset-0 h-full w-full transform-[rotateY(180deg)] backface-hidden">
       <div
         className={
-          "rounded-2xl p-6 h-full flex flex-col items-center justify-center bg-card text-card-foreground border border-border shadow-md"
+          "relative overflow-hidden rounded-2xl p-6 h-full flex flex-col items-center justify-center bg-card text-card-foreground border border-border shadow-md"
         }
       >
+        <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
         <h3 className="text-lg font-semibold mb-1">Actions</h3>
 
         <div className="flex gap-x-4">

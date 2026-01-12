@@ -55,7 +55,7 @@ export const StationMorphingDialogTest = ({
         const data = await apiFetch<{
           stations?: StationApiItem[];
           cashierLocationList?: StationApiItem[];
-        }>("/stations/stations");
+        }>("/stations");
         if (abort.aborted) return;
 
         const list = Array.isArray(data?.cashierLocationList)

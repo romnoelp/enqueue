@@ -71,12 +71,12 @@ const Dashboard = () => {
           apiFetch<{ employees?: unknown[] }>("/admin/employees").catch(() => ({
             employees: [],
           })),
-          apiFetch<{ activities?: unknown[] }>("/admin/get-activity", {
+          apiFetch<{ data?: unknown[] }>("/admin/activity-logs", {
             query: { startDate: start, endDate: end },
           }).catch(() => ({
-            activities: [],
+            data: [],
           })),
-          apiFetch<unknown>("/stations/stations").catch(() => null),
+          apiFetch<unknown>("/stations").catch(() => null),
         ]);
 
         const totalEmployees = Array.isArray(employeesJson.employees)
@@ -93,15 +93,15 @@ const Dashboard = () => {
         }));
         const stationsCount = stationsList.length;
 
-        const activityCount = Array.isArray(activitiesJson.activities)
-          ? activitiesJson.activities.length
+        const activityCount = Array.isArray(activitiesJson.data)
+          ? activitiesJson.data.length
           : 0;
 
         // Count active counters across all stations (active = has cashierUid)
         let activeCounters = 0;
         if (stationsList.length > 0) {
           const counterPromises = stationsList.map((station: StationListItem) =>
-            apiFetch<{ counters?: CounterApiItem[] }>("/counters/counters", {
+            apiFetch<{ counters?: CounterApiItem[] }>("/counters", {
               query: { stationId: station.id ?? "", limit: 200 },
             }).catch(() => ({ counters: [] }))
           );

@@ -67,7 +67,7 @@ export default function AddStationDialog({ onCreated }: Props) {
         type: typeValue,
       };
 
-      await apiFetch("/stations/stations", {
+      await apiFetch("/stations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -148,14 +148,16 @@ export const apiFetch = async <T = unknown>(
     }
   }
 
-  const response = await fetch(url, {
+  const requestInit: RequestInit = {
     ...rest,
     body: requestBody,
     headers: requestHeaders,
     cache: cache ?? "no-store",
     credentials: credentials ?? "include",
     method: method ?? "GET",
-  });
+  };
+
+  const response = await fetch(url, requestInit);
 
   if (!response.ok) {
     let errorPayload: unknown = null;

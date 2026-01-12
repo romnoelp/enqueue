@@ -33,7 +33,7 @@ const Stations = () => {
   const fetchStations = async (showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
-      const res = await apiFetch<unknown>("/stations/stations");
+      const res = await apiFetch<unknown>("/stations");
       const raw = parseStationsResponse(res);
       const list = raw.map((rawItem) => ({
         id: (rawItem.id ?? rawItem.uid ?? "") as string,
