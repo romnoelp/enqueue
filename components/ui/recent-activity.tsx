@@ -3,7 +3,7 @@
 import { memo, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Clock, Activity, User, Download, Settings, Users } from "lucide-react";
-import { apiFetch } from "@/app/lib/backend/api";
+// import { apiFetch } from "@/app/lib/backend/api";
 
 type ActivityItem = {
   id?: string;
@@ -50,109 +50,109 @@ export const RecentActivity = memo(() => {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let mounted = true;
+  // useEffect(() => {
+  //   let mounted = true;
 
-    const fetchActivities = async () => {
-      try {
-        // default to last 7 days
-        const end = new Date().toISOString();
-        const start = new Date(
-          Date.now() - 7 * 24 * 60 * 60 * 1000
-        ).toISOString();
+  //   const fetchActivities = async () => {
+  //     try {
+  //       // default to last 7 days
+  //       const end = new Date().toISOString();
+  //       const start = new Date(
+  //         Date.now() - 7 * 24 * 60 * 60 * 1000
+  //       ).toISOString();
 
-        const json = await apiFetch<{
-          data?: RawActivity[];
-          activities?: RawActivity[];
-        }>("/admin/activity-logs", {
-          query: {
-            startDate: start,
-            endDate: end,
-          },
-        });
+  //       const json = await apiFetch<{
+  //         data?: RawActivity[];
+  //         activities?: RawActivity[];
+  //       }>("/admin/activity-logs", {
+  //         query: {
+  //           startDate: start,
+  //           endDate: end,
+  //         },
+  //       });
 
-        const raw = Array.isArray(json.data)
-          ? json.data
-          : Array.isArray(json.activities)
-          ? json.activities
-          : [];
+  //       const raw = Array.isArray(json.data)
+  //         ? json.data
+  //         : Array.isArray(json.activities)
+  //         ? json.activities
+  //         : [];
 
-        const items: ActivityItem[] = raw.map((a) => {
-          const timestampRaw = a.timestamp;
-          const ts =
-            typeof timestampRaw === "number"
-              ? timestampRaw
-              : timestampRaw
-              ? Number(timestampRaw)
-              : undefined;
+  //       const items: ActivityItem[] = raw.map((a) => {
+  //         const timestampRaw = a.timestamp;
+  //         const ts =
+  //           typeof timestampRaw === "number"
+  //             ? timestampRaw
+  //             : timestampRaw
+  //             ? Number(timestampRaw)
+  //             : undefined;
 
-          return {
-            id: a.id,
-            uid: a.uid ?? a.actorUID ?? a.actor ?? undefined,
-            action: a.action ?? String(a.type ?? "action"),
-            details: a.details ?? a.data ?? undefined,
-            timestamp:
-              typeof ts === "number" && Number.isFinite(ts) ? ts : undefined,
-          };
-        });
+  //         return {
+  //           id: a.id,
+  //           uid: a.uid ?? a.actorUID ?? a.actor ?? undefined,
+  //           action: a.action ?? String(a.type ?? "action"),
+  //           details: a.details ?? a.data ?? undefined,
+  //           timestamp:
+  //             typeof ts === "number" && Number.isFinite(ts) ? ts : undefined,
+  //         };
+  //       });
 
-        // Resolve user display names for any unique UIDs returned
-        const uniqueUids = Array.from(
-          new Set(items.map((it) => it.uid).filter(Boolean))
-        );
-        const userMap: Record<
-          string,
-          { displayName?: string; email?: string }
-        > = {};
+  //       // Resolve user display names for any unique UIDs returned
+  //       const uniqueUids = Array.from(
+  //         new Set(items.map((it) => it.uid).filter(Boolean))
+  //       );
+  //       const userMap: Record<
+  //         string,
+  //         { displayName?: string; email?: string }
+  //       > = {};
 
-        if (uniqueUids.length > 0) {
-          const userFetches = uniqueUids.map((u) =>
-            apiFetch<{ data?: FetchedUserData }>(
-              `/admin/users/${encodeURIComponent(u as string)}`
-            )
-              .then((j) => ({ uid: u, data: j?.data ?? null }))
-              .catch(() => ({ uid: u, data: null as FetchedUserData }))
-          );
+  //       if (uniqueUids.length > 0) {
+  //         const userFetches = uniqueUids.map((u) =>
+  //           apiFetch<{ data?: FetchedUserData }>(
+  //             `/admin/users/${encodeURIComponent(u as string)}`
+  //           )
+  //             .then((j) => ({ uid: u, data: j?.data ?? null }))
+  //             .catch(() => ({ uid: u, data: null as FetchedUserData }))
+  //         );
 
-          const resolved = await Promise.all(userFetches);
-          for (const r of resolved) {
-            if (r && r.uid && r.data) {
-              const data = r.data!;
-              userMap[r.uid as string] = {
-                displayName: data.displayName ?? data.name,
-                email: data.email,
-              };
-            }
-          }
-        }
+  //         const resolved = await Promise.all(userFetches);
+  //         for (const r of resolved) {
+  //           if (r && r.uid && r.data) {
+  //             const data = r.data!;
+  //             userMap[r.uid as string] = {
+  //               displayName: data.displayName ?? data.name,
+  //               email: data.email,
+  //             };
+  //           }
+  //         }
+  //       }
 
-        // Attach resolved display info to items for rendering
-        const itemsWithUser = items.map((it) => {
-          const meta = it.uid ? userMap[it.uid as string] : undefined;
-          return {
-            ...it,
-            displayName: meta?.displayName,
-            email: meta?.email,
-          } as ActivityItem;
-        });
+  //       // Attach resolved display info to items for rendering
+  //       const itemsWithUser = items.map((it) => {
+  //         const meta = it.uid ? userMap[it.uid as string] : undefined;
+  //         return {
+  //           ...it,
+  //           displayName: meta?.displayName,
+  //           email: meta?.email,
+  //         } as ActivityItem;
+  //       });
 
-        if (mounted) {
-          // limit to 4 items as requested
-          setActivities(itemsWithUser.slice(0, 4));
-        }
-      } catch (err) {
-        console.error("Failed to fetch recent activities", err);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
+  //       if (mounted) {
+  //         // limit to 4 items as requested
+  //         setActivities(itemsWithUser.slice(0, 4));
+  //       }
+  //     } catch (err) {
+  //       console.error("Failed to fetch recent activities", err);
+  //     } finally {
+  //       if (mounted) setLoading(false);
+  //     }
+  //   };
 
-    fetchActivities();
+  //   fetchActivities();
 
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  //   return () => {
+  //     mounted = false;
+  //   };
+  // }, []);
 
   return (
     <div className="border-border bg-card/40 rounded-xl border p-6 h-full flex flex-col">

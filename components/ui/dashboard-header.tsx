@@ -21,9 +21,7 @@ import {
 import { Filter, RefreshCw, MoreHorizontal } from "lucide-react";
 import { Avatar } from "./avatar";
 import { AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
-import { signOut, useSession } from "next-auth/react";
 export const DashboardHeader = memo(() => {
-  const { data: session } = useSession();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleRefresh = useCallback(() => {
@@ -94,21 +92,21 @@ export const DashboardHeader = memo(() => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Avatar className="rounded-md">
-                <AvatarImage src={session?.user?.image?.toString()} />
+                {/* <AvatarImage src={session?.user?.image?.toString()} /> */}
                 <AvatarFallback>NEU</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem>
-                <p className="font-base text-sm">{session?.user?.name}</p>
+                {/* <p className="font-base text-sm">{session?.user?.name}</p> */}
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <p className="font-base text-xs">{session?.user?.email}</p>
+                {/* <p className="font-base text-xs">{session?.user?.email}</p> */}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={async () => {
-                  await signOut({ callbackUrl: "/" });
+                  // await signOut({ callbackUrl: "/" });
                 }}
               >
                 Logout

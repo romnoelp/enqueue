@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import type { Station, StationListItem } from "@/types/station";
+import type { Station } from "@/types/station";
 import BounceLoader from "@/components/mvpblocks/bouncing-loader";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,12 +21,12 @@ import {
   FlipButtonBack,
 } from "@/components/animate-ui/components/buttons/flip";
 import { toast } from "sonner";
-import { apiFetch } from "@/app/lib/backend/api";
+import { isAxiosError } from "axios";
 
 interface DetailContentProps {
   initialData?: Partial<Station> | null;
   loading?: boolean;
-  onSave?: (payload: Partial<Station> | null) => Promise<void>;
+  onSave?: (payload: Partial<Station>) => Promise<void>;
 }
 
 const DetailContent = ({
@@ -86,28 +86,16 @@ const DetailContent = ({
       if (onSave) {
         await onSave(payload);
         toast.success("Station updated successfully");
-        return;
+      } else {
+        toast.error("No save handler provided");
       }
-
-      const stationID = (initialData as StationListItem)?.id;
-      if (!stationID) {
-        throw new Error(
-          "Station ID is missing and no custom save handler provided."
-        );
-      }
-
-      await apiFetch(
-        `/stations/stations/${encodeURIComponent(String(stationID))}`,
-        {
-          method: "PUT",
-          body: JSON.stringify(payload),
-        }
-      );
-
-      toast.success("Station updated successfully");
     } catch (err) {
       console.error("Save failed:", err);
-      toast.error((err as Error).message || "Failed to save changes");
+      if (isAxiosError(err) && err.response?.data?.message) {
+        toast.error(err.response.data.message);
+      } else {
+        toast.error("Failed to save changes");
+      }
     } finally {
       setIsSaving(false);
     }
