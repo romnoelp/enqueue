@@ -48,7 +48,7 @@ const FlipCard = ({ station, title }: Props) => {
 
   return (
     <div
-      className="group relative w-full max-w-sm perspective-[2000px]"
+      className="group relative w-full max-w-md perspective-[2000px]"
       style={{ height: CARD_HEIGHT }}
       onMouseEnter={() => setIsFlipped(true)}
       onMouseLeave={() => setIsFlipped(false)}

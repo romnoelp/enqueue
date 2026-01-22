@@ -143,7 +143,7 @@ export default function BlacklistedUserCard({
 
   return (
     <div
-      className="group relative w-full max-w-sm p-2 perspective-[2000px]"
+      className="group relative w-full max-w-md p-2 perspective-[2000px]"
       style={{ height: CARD_HEIGHT }}
       onMouseEnter={() => setIsFlipped(true)}
       onMouseLeave={() => setIsFlipped(false)}
