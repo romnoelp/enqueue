@@ -5,7 +5,7 @@ import type { Station } from "@/types/station";
 import FlipCardFront from "./FlipCardFront";
 import FlipCardBack from "./FlipCardBack";
 import { toast } from "sonner";
-import { api } from "@/app/lib/backend/api";
+import { api } from "@/app/lib/config/api";
 import { useStationsRefresh } from "../_contexts/StationsRefreshContext";
 import { isAxiosError } from "axios";
 // import { apiFetch } from "@/app/lib/backend/api";

@@ -6,7 +6,7 @@ import BounceLoader from "@/components/mvpblocks/bouncing-loader";
 // import { apiFetch } from "@/app/lib/backend/api";
 import StationsGrid from "@/app/(main)/(people)/stations/_components/StationsGrid";
 import AddStationDialog from "./_components/AddStationDialog";
-import { api } from "@/app/lib/backend/api";
+import { api } from "@/app/lib/config/api";
 import { isAxiosError } from "axios";
 import { Station } from "@/types";
 import { StationsRefreshProvider } from "./_contexts/StationsRefreshContext";
@@ -35,7 +35,7 @@ const Stations = () => {
     try {
       const response = await api.get("/stations", {
         params: {
-          limit: 5,
+          limit: 6,
         },
       });
       const cursor = response.data?.nextCursor ?? null;
@@ -61,7 +61,7 @@ const Stations = () => {
       const response = await api.get("/stations", {
         params: {
           cursor: nextCursor,
-          limit: 5,
+          limit: 6,
         },
       });
 

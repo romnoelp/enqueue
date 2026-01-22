@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DetailContent from "./DetailContent";
 import FlipCard from "./FlipCard";
 import CounterContent from "./CounterContent";
-import { api } from "@/app/lib/backend/api";
+import { api } from "@/app/lib/config/api";
 
 export const StationMorphingDialog = ({
   station,

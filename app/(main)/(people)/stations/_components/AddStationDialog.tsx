@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Magnetic } from "@/components/motion-primitives/magnetic";
 import { toast } from "sonner";
-import { api } from "@/app/lib/backend/api";
+import { api } from "@/app/lib/config/api";
 import { useStationsRefresh } from "../_contexts/StationsRefreshContext";
 import { isAxiosError } from "axios";
 

@@ -1,15 +1,16 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Mail, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { BlacklistedUserCardProps } from "./types/blacklisted-user-card.types";
+import { api } from "@/app/lib/config/api";
 
-const CARD_HEIGHT = "200px";
+const CARD_HEIGHT = "260px";
 const FLIP_DURATION = "700";
 
-const CardFront = ({ email, reason }: { email: string; reason: string }) => (
+const CardFront = ({ email, reason, blockedByUser }: { email: string; reason: string; blockedByUser: string | null }) => (
   <div
     className={cn(
       "absolute inset-0 h-full w-full",
@@ -49,14 +50,24 @@ const CardFront = ({ email, reason }: { email: string; reason: string }) => (
 
           <div className="h-px bg-border/50 my-2" />
 
-          <div className="flex items-center text-muted-foreground overflow-hidden whitespace-nowrap">
-            <Mail className="mr-2 h-4 w-4 text-destructive/70 shrink-0" />
-            <span
-              className="truncate"
-              style={{ fontSize: "clamp(0.7rem, 1.8vw, 0.875rem)" }}
-            >
-              Blacklisted
-            </span>
+          <div className="space-y-1">
+            <div className="flex items-center text-muted-foreground overflow-hidden whitespace-nowrap">
+              <Mail className="mr-2 h-4 w-4 text-destructive/70 shrink-0" />
+              <span
+                className="truncate"
+                style={{ fontSize: "clamp(0.7rem, 1.8vw, 0.875rem)" }}
+              >
+                Blacklisted
+              </span>
+            </div>
+            <div className="flex items-center text-muted-foreground overflow-hidden whitespace-nowrap">
+              <span
+                className="text-xs truncate"
+                style={{ fontSize: "clamp(0.65rem, 1.5vw, 0.75rem)" }}
+              >
+                Blocked by: {blockedByUser || "Loading..."}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -105,10 +116,30 @@ const CardBack = ({
 export default function BlacklistedUserCard({
   email,
   reason,
+  blockedBy,
   onRemove,
   removeLabel = "Remove",
 }: BlacklistedUserCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [blockedByUser, setBlockedByUser] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      if (!blockedBy) return;
+      
+      try {
+        const response = await api.get(`/admin/users/${blockedBy}`);
+        const userData = response.data?.data || response.data;
+        const userName = userData?.name || userData?.email || userData?.displayName || blockedBy;
+        setBlockedByUser(userName);
+      } catch (error) {
+        console.error(`Failed to fetch user data for ${blockedBy}`, error);
+        setBlockedByUser(blockedBy); // Fallback to UID if fetch fails
+      }
+    };
+
+    fetchUserDetails();
+  }, [blockedBy]);
 
   return (
     <div
@@ -124,7 +155,7 @@ export default function BlacklistedUserCard({
           transitionDuration: `${FLIP_DURATION}ms`,
         }}
       >
-        <CardFront email={email} reason={reason} />
+        <CardFront email={email} reason={reason} blockedByUser={blockedByUser} />
         <CardBack removeLabel={removeLabel} onRemove={onRemove} />
       </div>
     </div>

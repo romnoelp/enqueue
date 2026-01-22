@@ -34,7 +34,7 @@ import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { useStationsRefresh } from "../_contexts/StationsRefreshContext";
 import { Counter } from "@/types/counter";
-import { api } from "@/app/lib/backend/api";
+import { api } from "@/app/lib/config/api";
 import { isAxiosError } from "axios";
 
 type Props = {
@@ -90,7 +90,7 @@ const CounterContent = ({ stationId }: Props) => {
     try {
       const response = await api.get(`/counters/${stationId}`, {
         params: {
-          limit: 5,
+          limit: 6,
         },
       });
   
@@ -133,7 +133,7 @@ const CounterContent = ({ stationId }: Props) => {
       const response = await api.get(`/counters/${stationId}`, {
         params: {
           cursor: nextCursor,
-          limit: 5,
+          limit: 6,
         },
       });
       

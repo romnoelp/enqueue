@@ -1,7 +1,7 @@
 "use client";
 
 import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
-import { auth } from "@/app/lib/backend/firebase";
+import { auth } from "@/app/lib/config/firebase";
 import axios, { isAxiosError } from "axios";
 
 const provider = new GoogleAuthProvider();

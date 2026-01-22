@@ -1,5 +1,5 @@
 import axios from "axios"
-import { auth } from "@/app/lib/backend/firebase"
+import { auth } from "@/app/lib/config/firebase"
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_FUNCTIONS_BASE_URL

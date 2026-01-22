@@ -1,4 +1,4 @@
-import { fcm } from "../backend/firebase-admin";
+import { fcm } from "../config/firebase-admin";
 
 export const sendNotification = async (
   fcmToken: string,

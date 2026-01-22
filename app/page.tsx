@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "@/app/lib/backend/firebase";
+import { auth } from "@/app/lib/config/firebase";
 import BounceLoader from "@/components/mvpblocks/bouncing-loader";
 import { signInWithGoogle } from "@/app/lib/auth/signInWithGoogle";
 import { signOut } from "firebase/auth";

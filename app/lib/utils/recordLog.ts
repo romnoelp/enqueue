@@ -1,4 +1,4 @@
-import { firestoreDb } from "../backend/firebase-admin";
+import { firestoreDb } from "../config/firebase-admin";
 import { ActionType } from "../../../types";
 
 export const recordLog = async (
