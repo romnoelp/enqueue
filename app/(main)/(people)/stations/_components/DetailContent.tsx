@@ -20,8 +20,20 @@ import {
   FlipButtonFront,
   FlipButtonBack,
 } from "@/components/animate-ui/components/buttons/flip";
+import { LiquidButton } from "@/components/animate-ui/components/buttons/liquid";
 import { toast } from "sonner";
 import { isAxiosError } from "axios";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { api } from "@/app/lib/config/api";
+import { PlayfulTodolist, type PlayfulTodolistItem } from "@/components/animate-ui/components/community/playful-todolist";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface DetailContentProps {
   initialData?: Partial<Station> | null;
@@ -38,6 +50,9 @@ const DetailContent = ({
   const [description, setDescription] = useState("");
   const [typeValue, setTypeValue] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [showAssignDialog, setShowAssignDialog] = useState(false);
+  const [availableCashiers, setAvailableCashiers] = useState<any[]>([]);
+  const [loadingCashiers, setLoadingCashiers] = useState(false);
 
   const isValid =
     Boolean(name.trim()) && Boolean(description.trim()) && Boolean(typeValue);
@@ -101,6 +116,30 @@ const DetailContent = ({
     }
   };
 
+  // MOCK DATA for available cashiers (extended)
+  const MOCK_CASHIERS = [
+    { uid: "cashier1", name: "Jane Doe", email: "jane.doe@email.com" },
+    { uid: "cashier2", name: "John Smith", email: "john.smith@email.com" },
+    { uid: "cashier3", name: "Alice Brown", email: "alice.brown@email.com" },
+    { uid: "cashier4", name: "Bob Lee", email: "bob.lee@email.com" },
+    { uid: "cashier5", name: "Maria Garcia", email: "maria.garcia@email.com" },
+    { uid: "cashier6", name: "Liam Wong", email: "liam.wong@email.com" },
+    { uid: "cashier7", name: "Sophia Kim", email: "sophia.kim@email.com" },
+    { uid: "cashier8", name: "Noah Patel", email: "noah.patel@email.com" },
+    { uid: "cashier9", name: "Emma Rossi", email: "emma.rossi@email.com" },
+    { uid: "cashier10", name: "Lucas Müller", email: "lucas.muller@email.com" },
+  ];
+
+  const handleOpenAssignDialog = async () => {
+    setShowAssignDialog(true);
+    setLoadingCashiers(true);
+    // Simulate API delay
+    setTimeout(() => {
+      setAvailableCashiers(MOCK_CASHIERS);
+      setLoadingCashiers(false);
+    }, 700);
+  };
+
   // Do not hide the whole component when saving; the button will be hidden instead.
 
   // Show loader when explicitly loading or no data yet
@@ -152,22 +191,32 @@ const DetailContent = ({
           />
         </div>
 
-        {/* Station Type */}
-        <div className="space-y-2 sm:w-64">
-          <Label className="font-semibold">Station Type</Label>
-          <Select value={typeValue} onValueChange={setTypeValue}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select a station type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="auditing">Auditing</SelectItem>
-                <SelectItem value="clinic">Clinic</SelectItem>
-                <SelectItem value="payment">Payment</SelectItem>
-                <SelectItem value="registrar">Registrar</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+        {/* Station Type and Assign Cashiers Button */}
+        <div className="flex items-end justify-between gap-4">
+          <div className="space-y-2 sm:w-64">
+            <Label className="font-semibold">Station Type</Label>
+            <Select value={typeValue} onValueChange={setTypeValue}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a station type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="auditing">Auditing</SelectItem>
+                  <SelectItem value="clinic">Clinic</SelectItem>
+                  <SelectItem value="payment">Payment</SelectItem>
+                  <SelectItem value="registrar">Registrar</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+          <LiquidButton
+            size="lg"
+            variant="default"
+            type="button"
+            onClick={handleOpenAssignDialog}
+          >
+            Assign cashiers
+          </LiquidButton>
         </div>
 
         <div className="flex justify-end pt-4">
@@ -182,6 +231,73 @@ const DetailContent = ({
             </FlipButton>
           )}
         </div>
+
+        {/* Assign Cashiers Dialog */}
+        <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Assign Cashiers</DialogTitle>
+              <DialogDescription>
+                Select a cashier to assign to this station.
+              </DialogDescription>
+            </DialogHeader>
+
+            {/* Controls Row */}
+            <div className="flex items-center gap-2 mb-4">
+              <Input
+                placeholder="Search cashier..."
+                className="flex-1"
+                // Add value/onChange for search if needed
+              />
+              <LiquidButton
+                size="lg"
+                variant="default"
+                type="button"
+                onClick={() => handleOpenAssignDialog()}
+                disabled={loadingCashiers}
+              >
+                Refresh
+              </LiquidButton>
+              <LiquidButton
+                size="lg"
+                variant="default"
+                type="button"
+                // Add onClick for save action
+              >
+                Save
+              </LiquidButton>
+            </div>
+
+            {loadingCashiers ? (
+              <div className="flex justify-center items-center py-8">
+                <BounceLoader />
+              </div>
+            ) : availableCashiers.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8">
+                No available cashiers found.
+              </div>
+            ) : (
+              <ScrollArea className="max-h-64">
+                <PlayfulTodolist
+                  items={availableCashiers.map((cashier) => ({
+                    id: cashier.uid,
+                    label: (
+                      <span>
+                        <span className="font-medium">
+                          {cashier.name || cashier.email}
+                        </span>
+                        <span className="text-xs text-muted-foreground ml-2">
+                          {cashier.email}
+                        </span>
+                      </span>
+                    ),
+                  }))}
+                />
+              </ScrollArea>
+            )}
+          </DialogContent>
+        </Dialog>
+        {/* End Assign Cashiers Dialog */}
       </div>
     </Card>
   );
