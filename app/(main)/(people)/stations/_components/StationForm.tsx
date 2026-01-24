@@ -22,6 +22,7 @@ interface StationFormProps {
   typeValue: string;
   setTypeValue: (v: string) => void;
   onOpenAssignDialog: () => void;
+  onViewCashiers?: () => void;
 }
 
 const StationForm = ({
@@ -32,6 +33,7 @@ const StationForm = ({
   typeValue,
   setTypeValue,
   onOpenAssignDialog,
+  onViewCashiers,
 }: StationFormProps) => {
   return (
     <>
@@ -78,13 +80,23 @@ const StationForm = ({
           </Select>
         </div>
 
-        <LiquidButton
-          size="lg"
-          variant="default"
-          type="button"
-          onClick={onOpenAssignDialog}>
-          Assign cashiers
-        </LiquidButton>
+        <div className="flex items-center gap-2">
+          <LiquidButton
+            size="lg"
+            variant="default"
+            type="button"
+            onClick={onOpenAssignDialog}>
+            Assign cashiers
+          </LiquidButton>
+
+          <LiquidButton
+            size="lg"
+            variant="ghost"
+            type="button"
+            onClick={onViewCashiers}>
+            View cashiers
+          </LiquidButton>
+        </div>
       </div>
     </>
   );

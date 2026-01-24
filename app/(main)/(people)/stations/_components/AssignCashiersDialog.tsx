@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { LiquidButton } from "@/components/animate-ui/components/buttons/liquid";
 import {
@@ -10,11 +11,9 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import BounceLoader from "@/components/mvpblocks/bouncing-loader";
-import {
-  PlayfulTodolist,
-  type PlayfulTodolistItem,
-} from "@/components/animate-ui/components/community/playful-todolist";
+import { Checkbox } from "@/components/animate-ui/components/radix/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Label } from "@/components/ui/label";
 import type { Dispatch, SetStateAction } from "react";
 
 interface AssignCashiersDialogProps {
@@ -34,6 +33,15 @@ const AssignCashiersDialog = ({
   onRefresh,
   onSave,
 }: AssignCashiersDialogProps) => {
+  const [checkedById, setCheckedById] = useState<Record<string, boolean>>(
+    () => ({}),
+  );
+
+  useEffect(() => {
+    setCheckedById(
+      Object.fromEntries(availableCashiers.map((c) => [String(c.uid), false])),
+    );
+  }, [availableCashiers]);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
@@ -73,24 +81,34 @@ const AssignCashiersDialog = ({
           </div>
         ) : (
           <ScrollArea className="max-h-64">
-            <PlayfulTodolist
-              items={availableCashiers.map(
-                (cashier) =>
-                  ({
-                    id: cashier.uid,
-                    label: (
-                      <span>
-                        <span className="font-medium">
-                          {cashier.name || cashier.email}
-                        </span>
-                        <span className="text-xs text-muted-foreground ml-2">
-                          {cashier.email}
-                        </span>
-                      </span>
-                    ),
-                  }) as PlayfulTodolistItem,
-              )}
-            />
+            <div className="space-y-2">
+              {availableCashiers.map((cashier) => (
+                <div
+                  key={cashier.uid}
+                  className="flex items-center justify-between p-3 border-b last:border-b-0">
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      checked={!!checkedById[String(cashier.uid)]}
+                      onCheckedChange={(val) =>
+                        setCheckedById((s) => ({
+                          ...s,
+                          [String(cashier.uid)]: val === true,
+                        }))
+                      }
+                      id={`assign-${cashier.uid}`}
+                    />
+                    <div>
+                      <Label className="font-medium">
+                        {cashier.name || cashier.email}
+                      </Label>
+                      <div className="text-xs text-muted-foreground">
+                        {cashier.email}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </ScrollArea>
         )}
       </DialogContent>

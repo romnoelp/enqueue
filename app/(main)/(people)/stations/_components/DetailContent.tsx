@@ -12,6 +12,20 @@ import DetailHeader from "./DetailHeader";
 import StationForm from "./StationForm";
 import AssignCashiersDialog from "./AssignCashiersDialog";
 import SaveControls from "./SaveControls";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { LiquidButton } from "@/components/animate-ui/components/buttons/liquid";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  PlayfulTodolist,
+  type PlayfulTodolistItem,
+} from "@/components/animate-ui/components/community/playful-todolist";
 
 interface DetailContentProps {
   initialData?: Partial<Station> | null;
@@ -29,8 +43,150 @@ const DetailContent = ({
   const [typeValue, setTypeValue] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
+  const [showViewDialog, setShowViewDialog] = useState(false);
   const [availableCashiers, setAvailableCashiers] = useState<any[]>([]);
   const [loadingCashiers, setLoadingCashiers] = useState(false);
+  const [checkedViewIds, setCheckedViewIds] = useState<Array<string | number>>(
+    [],
+  );
+
+  const mockViewItems: PlayfulTodolistItem[] = useMemo(
+    () => [
+      {
+        id: "u1",
+        label: (
+          <span>
+            <span className="font-medium">Alice Doe</span>{" "}
+            <span className="text-xs text-muted-foreground ml-2">
+              alice@example.com
+            </span>
+          </span>
+        ),
+      },
+      {
+        id: "u2",
+        label: (
+          <span>
+            <span className="font-medium">Bob Smith</span>{" "}
+            <span className="text-xs text-muted-foreground ml-2">
+              bob@example.com
+            </span>
+          </span>
+        ),
+      },
+      {
+        id: "u3",
+        label: (
+          <span>
+            <span className="font-medium">Carol Nguyen</span>{" "}
+            <span className="text-xs text-muted-foreground ml-2">
+              carol@example.com
+            </span>
+          </span>
+        ),
+      },
+      {
+        id: "u4",
+        label: (
+          <span>
+            <span className="font-medium">Daniel Park</span>{" "}
+            <span className="text-xs text-muted-foreground ml-2">
+              daniel@example.com
+            </span>
+          </span>
+        ),
+      },
+      {
+        id: "u5",
+        label: (
+          <span>
+            <span className="font-medium">Eve Martinez</span>{" "}
+            <span className="text-xs text-muted-foreground ml-2">
+              eve@example.com
+            </span>
+          </span>
+        ),
+      },
+      {
+        id: "u6",
+        label: (
+          <span>
+            <span className="font-medium">Frank Liu</span>{" "}
+            <span className="text-xs text-muted-foreground ml-2">
+              frank@example.com
+            </span>
+          </span>
+        ),
+      },
+      {
+        id: "u7",
+        label: (
+          <span>
+            <span className="font-medium">Grace Hall</span>{" "}
+            <span className="text-xs text-muted-foreground ml-2">
+              grace@example.com
+            </span>
+          </span>
+        ),
+      },
+      {
+        id: "u8",
+        label: (
+          <span>
+            <span className="font-medium">Henry Wright</span>{" "}
+            <span className="text-xs text-muted-foreground ml-2">
+              henry@example.com
+            </span>
+          </span>
+        ),
+      },
+      {
+        id: "u9",
+        label: (
+          <span>
+            <span className="font-medium">Ivy Chen</span>{" "}
+            <span className="text-xs text-muted-foreground ml-2">
+              ivy@example.com
+            </span>
+          </span>
+        ),
+      },
+      {
+        id: "u10",
+        label: (
+          <span>
+            <span className="font-medium">Jackie O'Neil</span>{" "}
+            <span className="text-xs text-muted-foreground ml-2">
+              jackie@example.com
+            </span>
+          </span>
+        ),
+      },
+      {
+        id: "u11",
+        label: (
+          <span>
+            <span className="font-medium">Khalid Rahman</span>{" "}
+            <span className="text-xs text-muted-foreground ml-2">
+              khalid@example.com
+            </span>
+          </span>
+        ),
+      },
+      {
+        id: "u12",
+        label: (
+          <span>
+            <span className="font-medium">Luna Park</span>{" "}
+            <span className="text-xs text-muted-foreground ml-2">
+              luna@example.com
+            </span>
+          </span>
+        ),
+      },
+    ],
+    [],
+  );
 
   const isValid =
     Boolean(name.trim()) && Boolean(description.trim()) && Boolean(typeValue);
@@ -113,6 +269,10 @@ const DetailContent = ({
     }
   };
 
+  const handleViewCashiers = () => {
+    setShowViewDialog(true);
+  };
+
   if (loading || (!initialData && loading !== false)) {
     return (
       <Card className="h-full p-4">
@@ -136,6 +296,7 @@ const DetailContent = ({
           typeValue={typeValue}
           setTypeValue={setTypeValue}
           onOpenAssignDialog={() => void handleOpenAssignDialog()}
+          onViewCashiers={() => void handleViewCashiers()}
         />
 
         <SaveControls
@@ -152,6 +313,57 @@ const DetailContent = ({
           loadingCashiers={loadingCashiers}
           onRefresh={() => void handleOpenAssignDialog()}
         />
+
+        <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>View Cashiers</DialogTitle>
+              <DialogDescription />
+            </DialogHeader>
+
+            <div className="flex items-center gap-2 mb-4">
+              <Input placeholder="Search cashier..." className="flex-1" />
+              <LiquidButton
+                size="lg"
+                variant="default"
+                type="button"
+                onClick={() => {
+                  setCheckedViewIds([]);
+                }}>
+                Refresh
+              </LiquidButton>
+              <LiquidButton
+                size="lg"
+                variant="default"
+                type="button"
+                onClick={() => {
+                  if (checkedViewIds.length === 0) {
+                    toast.error("Select cashiers to unassign");
+                    return;
+                  }
+                  toast.success(
+                    `Unassigned ${checkedViewIds.length} cashier(s)`,
+                  );
+                  setCheckedViewIds([]);
+                }}>
+                Unassign cashiers
+              </LiquidButton>
+            </div>
+
+            {mockViewItems.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8">
+                No cashiers found.
+              </div>
+            ) : (
+              <ScrollArea className="max-h-64">
+                <PlayfulTodolist
+                  items={mockViewItems}
+                  onCheckedChange={(ids) => setCheckedViewIds(ids)}
+                />
+              </ScrollArea>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </Card>
   );
