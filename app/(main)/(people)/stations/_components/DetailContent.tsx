@@ -22,10 +22,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { LiquidButton } from "@/components/animate-ui/components/buttons/liquid";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  PlayfulTodolist,
-  type PlayfulTodolistItem,
-} from "@/components/animate-ui/components/community/playful-todolist";
+import { Label } from "@/components/ui/label";
+import { Cashier } from "@/types/cashier";
 
 interface DetailContentProps {
   initialData?: Partial<Station> | null;
@@ -44,149 +42,11 @@ const DetailContent = ({
   const [isSaving, setIsSaving] = useState(false);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [showViewDialog, setShowViewDialog] = useState(false);
-  const [availableCashiers, setAvailableCashiers] = useState<any[]>([]);
+  const [availableCashiers, setAvailableCashiers] = useState<Cashier[]>([]);
   const [loadingCashiers, setLoadingCashiers] = useState(false);
-  const [checkedViewIds, setCheckedViewIds] = useState<Array<string | number>>(
-    [],
-  );
-
-  const mockViewItems: PlayfulTodolistItem[] = useMemo(
-    () => [
-      {
-        id: "u1",
-        label: (
-          <span>
-            <span className="font-medium">Alice Doe</span>{" "}
-            <span className="text-xs text-muted-foreground ml-2">
-              alice@example.com
-            </span>
-          </span>
-        ),
-      },
-      {
-        id: "u2",
-        label: (
-          <span>
-            <span className="font-medium">Bob Smith</span>{" "}
-            <span className="text-xs text-muted-foreground ml-2">
-              bob@example.com
-            </span>
-          </span>
-        ),
-      },
-      {
-        id: "u3",
-        label: (
-          <span>
-            <span className="font-medium">Carol Nguyen</span>{" "}
-            <span className="text-xs text-muted-foreground ml-2">
-              carol@example.com
-            </span>
-          </span>
-        ),
-      },
-      {
-        id: "u4",
-        label: (
-          <span>
-            <span className="font-medium">Daniel Park</span>{" "}
-            <span className="text-xs text-muted-foreground ml-2">
-              daniel@example.com
-            </span>
-          </span>
-        ),
-      },
-      {
-        id: "u5",
-        label: (
-          <span>
-            <span className="font-medium">Eve Martinez</span>{" "}
-            <span className="text-xs text-muted-foreground ml-2">
-              eve@example.com
-            </span>
-          </span>
-        ),
-      },
-      {
-        id: "u6",
-        label: (
-          <span>
-            <span className="font-medium">Frank Liu</span>{" "}
-            <span className="text-xs text-muted-foreground ml-2">
-              frank@example.com
-            </span>
-          </span>
-        ),
-      },
-      {
-        id: "u7",
-        label: (
-          <span>
-            <span className="font-medium">Grace Hall</span>{" "}
-            <span className="text-xs text-muted-foreground ml-2">
-              grace@example.com
-            </span>
-          </span>
-        ),
-      },
-      {
-        id: "u8",
-        label: (
-          <span>
-            <span className="font-medium">Henry Wright</span>{" "}
-            <span className="text-xs text-muted-foreground ml-2">
-              henry@example.com
-            </span>
-          </span>
-        ),
-      },
-      {
-        id: "u9",
-        label: (
-          <span>
-            <span className="font-medium">Ivy Chen</span>{" "}
-            <span className="text-xs text-muted-foreground ml-2">
-              ivy@example.com
-            </span>
-          </span>
-        ),
-      },
-      {
-        id: "u10",
-        label: (
-          <span>
-            <span className="font-medium">Jackie O'Neil</span>{" "}
-            <span className="text-xs text-muted-foreground ml-2">
-              jackie@example.com
-            </span>
-          </span>
-        ),
-      },
-      {
-        id: "u11",
-        label: (
-          <span>
-            <span className="font-medium">Khalid Rahman</span>{" "}
-            <span className="text-xs text-muted-foreground ml-2">
-              khalid@example.com
-            </span>
-          </span>
-        ),
-      },
-      {
-        id: "u12",
-        label: (
-          <span>
-            <span className="font-medium">Luna Park</span>{" "}
-            <span className="text-xs text-muted-foreground ml-2">
-              luna@example.com
-            </span>
-          </span>
-        ),
-      },
-    ],
-    [],
-  );
+  const [assignedCashiers, setAssignedCashiers] = useState<Cashier[]>([]);
+  const [loadingAssignedCashiers, setLoadingAssignedCashiers] = useState(false);
+  const [unassigningById, setUnassigningById] = useState<Record<string, boolean>>({});
 
   const isValid =
     Boolean(name.trim()) && Boolean(description.trim()) && Boolean(typeValue);
@@ -255,7 +115,7 @@ const DetailContent = ({
     setLoadingCashiers(true);
     try {
       const res = await api.get("/admin/available-cashiers");
-      setAvailableCashiers(Array.isArray(res.data) ? res.data : []);
+      setAvailableCashiers(res.data.availableCashiers);
     } catch (err) {
       console.error("Failed to fetch available cashiers:", err);
       if (isAxiosError(err) && err.response?.data?.message) {
@@ -269,8 +129,52 @@ const DetailContent = ({
     }
   };
 
-  const handleViewCashiers = () => {
+  const handleViewCashiers = async () => {
+    if (!initialData?.id) {
+      toast.error("Station ID is required");
+      return;
+    }
+    
     setShowViewDialog(true);
+    setLoadingAssignedCashiers(true);
+    try {
+      const res = await api.get(`/admin/stations/${initialData.id}/cashiers`);
+      setAssignedCashiers(res.data.cashiers);
+    } catch (err) {
+      console.error("Failed to fetch assigned cashiers:", err);
+      if (isAxiosError(err) && err.response?.data?.message) {
+        toast.error(err.response.data.message);
+      } else {
+        toast.error("Failed to load assigned cashiers");
+      }
+      setAssignedCashiers([]);
+    } finally {
+      setLoadingAssignedCashiers(false);
+    }
+  };
+
+  const handleUnassignCashier = async (userId: string) => {
+    setUnassigningById((prev) => ({ ...prev, [userId]: true }));
+
+    try {
+      await api.post("/admin/unassign-cashier", {
+        userId,
+      });
+
+      // Remove the cashier from the local list
+      setAssignedCashiers((prev) => prev.filter((c) => String(c.uid) !== userId));
+      
+      toast.success("Cashier unassigned successfully");
+    } catch (error) {
+      console.error("Failed to unassign cashier:", error);
+      if (isAxiosError(error) && error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Failed to unassign cashier");
+      }
+    } finally {
+      setUnassigningById((prev) => ({ ...prev, [userId]: false }));
+    }
   };
 
   if (loading || (!initialData && loading !== false)) {
@@ -312,13 +216,16 @@ const DetailContent = ({
           availableCashiers={availableCashiers}
           loadingCashiers={loadingCashiers}
           onRefresh={() => void handleOpenAssignDialog()}
+          stationId={initialData?.id ?? ""}
         />
 
         <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>View Cashiers</DialogTitle>
-              <DialogDescription />
+              <DialogDescription>
+                Manage cashiers assigned to this station.
+              </DialogDescription>
             </DialogHeader>
 
             <div className="flex items-center gap-2 mb-4">
@@ -327,39 +234,50 @@ const DetailContent = ({
                 size="lg"
                 variant="default"
                 type="button"
+                disabled={loadingAssignedCashiers}
                 onClick={() => {
-                  setCheckedViewIds([]);
+                  void handleViewCashiers();
                 }}>
-                Refresh
-              </LiquidButton>
-              <LiquidButton
-                size="lg"
-                variant="default"
-                type="button"
-                onClick={() => {
-                  if (checkedViewIds.length === 0) {
-                    toast.error("Select cashiers to unassign");
-                    return;
-                  }
-                  toast.success(
-                    `Unassigned ${checkedViewIds.length} cashier(s)`,
-                  );
-                  setCheckedViewIds([]);
-                }}>
-                Unassign cashiers
+                {loadingAssignedCashiers ? "Loading..." : "Refresh"}
               </LiquidButton>
             </div>
 
-            {mockViewItems.length === 0 ? (
+            {loadingAssignedCashiers ? (
+              <div className="flex justify-center items-center py-8">
+                <BounceLoader />
+              </div>
+            ) : assignedCashiers.length === 0 ? (
               <div className="text-center text-muted-foreground py-8">
                 No cashiers found.
               </div>
             ) : (
               <ScrollArea className="max-h-64">
-                <PlayfulTodolist
-                  items={mockViewItems}
-                  onCheckedChange={(ids) => setCheckedViewIds(ids)}
-                />
+                <div className="space-y-2">
+                  {assignedCashiers.map((cashier) => (
+                    <div
+                      key={cashier.uid}
+                      className="flex items-center justify-between p-3 border-b last:border-b-0">
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <Label className="font-medium">
+                            {cashier.name || cashier.email}
+                          </Label>
+                          <div className="text-xs text-muted-foreground">
+                            {cashier.email}
+                          </div>
+                        </div>
+                      </div>
+                      <LiquidButton
+                        size="sm"
+                        variant="destructive"
+                        type="button"
+                        onClick={() => handleUnassignCashier(String(cashier.uid))}
+                        disabled={unassigningById[String(cashier.uid)]}>
+                        {unassigningById[String(cashier.uid)] ? "Unassigning..." : "Unassign"}
+                      </LiquidButton>
+                    </div>
+                  ))}
+                </div>
               </ScrollArea>
             )}
           </DialogContent>

@@ -3,7 +3,7 @@
 import BounceLoader from "@/components/mvpblocks/bouncing-loader";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import * as motion from "motion/react-client";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import BlacklistedUserCard from "@/components/mvpblocks/blacklisted-user-card";
 import type { Blacklist } from "@/types/blacklist";
 import Actions from "./_components/Actions";
@@ -13,15 +13,49 @@ import AddBlacklistDialog from "./_components/AddBlacklistDialog";
 import { useDialog } from "@/hooks/use-dialog";
 import { getErrorMessage } from "@/lib/error-utils";
 import { useBlacklistedUsers } from "./_hooks/use-blacklisted-users";
-import { useState } from "react";
 import { api } from "@/app/lib/config/api";
 
 const Blacklisted = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [userEmailMap, setUserEmailMap] = useState<Map<string, string>>(new Map());
+  const emails = useRef<Set<string>>(new Set());
 
   const { blacklisted, isLoading, blockUser, unblockUser } = useBlacklistedUsers();
   const removeDialog = useDialog<Blacklist | null>(null);
   const addDialog = useDialog<boolean>(false);
+
+  const loadUserEmail = useCallback(async (userId: string) => {
+    if (emails.current.has(userId)) {
+      return;
+    }
+
+    emails.current.add(userId);
+    try {
+      const res = await api.get(`/admin/users/${userId}`);
+      const email = res.data.user.email ?? null;
+      if (email) {
+        setUserEmailMap((prev) => {
+          const newMap = new Map(prev);
+          newMap.set(userId, email);
+          return newMap;
+        });
+      }
+    } catch (error) {
+      console.error(`Failed to fetch email for user ${userId}`, error);
+    }
+    emails.current.delete(userId);
+  }, []);
+
+  useEffect(() => {
+    const uniqueUserIds = new Set(
+      blacklisted.map((user) => user.blockedBy).filter(Boolean)
+    );
+    uniqueUserIds.forEach((userId) => {
+      if (userId && !userEmailMap.has(userId) && !emails.current.has(userId)) {
+        loadUserEmail(userId);
+      }
+    });
+  }, [blacklisted, userEmailMap, loadUserEmail]);
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -137,6 +171,7 @@ const Blacklisted = () => {
                     email={user.email}
                     reason={user.reason}
                     blockedBy={user.blockedBy}
+                    blockedByEmail={userEmailMap.get(user.blockedBy)}
                     onRemove={() => removeDialog.open(user)}
                   />
                 </motion.div>

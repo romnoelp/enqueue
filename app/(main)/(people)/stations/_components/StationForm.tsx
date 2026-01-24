@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { LiquidButton } from "@/components/animate-ui/components/buttons/liquid";
-import type { Station } from "@/types/station";
 
 interface StationFormProps {
   name: string;

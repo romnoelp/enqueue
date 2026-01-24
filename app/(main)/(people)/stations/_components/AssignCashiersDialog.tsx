@@ -11,18 +11,21 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import BounceLoader from "@/components/mvpblocks/bouncing-loader";
-import { Checkbox } from "@/components/animate-ui/components/radix/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
 import type { Dispatch, SetStateAction } from "react";
+import { Cashier } from "@/types/cashier";
+import { toast } from "sonner";
+import { api } from "@/app/lib/config/api";
+import { isAxiosError } from "axios";
 
 interface AssignCashiersDialogProps {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
-  availableCashiers: any[];
+  availableCashiers: Cashier[];
   loadingCashiers: boolean;
   onRefresh: () => void;
-  onSave?: () => void;
+  stationId: string;
 }
 
 const AssignCashiersDialog = ({
@@ -31,17 +34,41 @@ const AssignCashiersDialog = ({
   availableCashiers,
   loadingCashiers,
   onRefresh,
-  onSave,
+  stationId,
 }: AssignCashiersDialogProps) => {
-  const [checkedById, setCheckedById] = useState<Record<string, boolean>>(
-    () => ({}),
-  );
+  const [localCashiers, setLocalCashiers] = useState<Cashier[]>([]);
+  const [assigningById, setAssigningById] = useState<Record<string, boolean>>({});
 
+  // Update local cashiers when availableCashiers changes
   useEffect(() => {
-    setCheckedById(
-      Object.fromEntries(availableCashiers.map((c) => [String(c.uid), false])),
-    );
+    setLocalCashiers(availableCashiers);
   }, [availableCashiers]);
+
+  const handleAssignCashier = async (userId: string) => {
+    setAssigningById((prev) => ({ ...prev, [userId]: true }));
+    console.log(userId, stationId)
+    try {
+      await api.post("/admin/assign-cashier", {
+        userId,
+        stationId,
+      });
+
+      // Remove the cashier from the local list
+      setLocalCashiers((prev) => prev.filter((c) => String(c.uid) !== userId));
+      
+      toast.success("Cashier assigned successfully");
+      onRefresh();
+    } catch (error) {
+      console.error("Failed to assign cashier:", error);
+      if (isAxiosError(error) && error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Failed to assign cashier");
+      }
+    } finally {
+      setAssigningById((prev) => ({ ...prev, [userId]: false }));
+    }
+  };
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
@@ -62,41 +89,24 @@ const AssignCashiersDialog = ({
             disabled={loadingCashiers}>
             Refresh
           </LiquidButton>
-          <LiquidButton
-            size="lg"
-            variant="default"
-            type="button"
-            onClick={onSave}>
-            Save
-          </LiquidButton>
         </div>
 
         {loadingCashiers ? (
           <div className="flex justify-center items-center py-8">
             <BounceLoader />
           </div>
-        ) : availableCashiers.length === 0 ? (
+        ) : localCashiers.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">
             No available cashiers found.
           </div>
         ) : (
           <ScrollArea className="max-h-64">
             <div className="space-y-2">
-              {availableCashiers.map((cashier) => (
+              {localCashiers.map((cashier) => (
                 <div
                   key={cashier.uid}
                   className="flex items-center justify-between p-3 border-b last:border-b-0">
                   <div className="flex items-center gap-3">
-                    <Checkbox
-                      checked={!!checkedById[String(cashier.uid)]}
-                      onCheckedChange={(val) =>
-                        setCheckedById((s) => ({
-                          ...s,
-                          [String(cashier.uid)]: val === true,
-                        }))
-                      }
-                      id={`assign-${cashier.uid}`}
-                    />
                     <div>
                       <Label className="font-medium">
                         {cashier.name || cashier.email}
@@ -106,6 +116,14 @@ const AssignCashiersDialog = ({
                       </div>
                     </div>
                   </div>
+                  <LiquidButton
+                    size="sm"
+                    variant="default"
+                    type="button"
+                    onClick={() => handleAssignCashier(String(cashier.uid))}
+                    disabled={assigningById[String(cashier.uid)]}>
+                    {assigningById[String(cashier.uid)] ? "Assigning..." : "Assign"}
+                  </LiquidButton>
                 </div>
               ))}
             </div>

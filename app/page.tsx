@@ -10,8 +10,6 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/app/lib/config/firebase";
 import BounceLoader from "@/components/mvpblocks/bouncing-loader";
 import { signInWithGoogle } from "@/app/lib/auth/signInWithGoogle";
-import { signOut } from "firebase/auth";
-import axios, { isAxiosError } from "axios";
 
 export default function GradientHero() {
   const router = useRouter();
@@ -20,33 +18,11 @@ export default function GradientHero() {
 
   useEffect(() => {
     // Redirect to dashboard if already signed in and /auth/me accepts the user
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user == null) {
         return;
       }
-
-      try {
-        const idToken = await user.getIdToken();
-
-        await axios.get(`${process.env.NEXT_PUBLIC_FUNCTIONS_BASE_URL}/auth/me`, {
-          headers: { Authorization: `Bearer ${idToken}` },
-        });
-
-        router.replace("/dashboard");
-      } catch (error) {
-        
-        if (isAxiosError(error)) {
-          const status = error.response?.status;
-          if (status === 401 || status === 403) {
-            await signOut(auth);
-            router.replace("/");
-          } else {
-            console.error("/auth/me error:", error.response?.data ?? error.message);
-          }
-        } else {
-          console.error("/auth/me error:", error);
-        }
-      }
+      router.replace("/dashboard");
     });
     return () => unsubscribe();
   }, [router]);
@@ -67,9 +43,9 @@ export default function GradientHero() {
           onClick={async () => {
             try {
               setClicked(true);
-              signInWithGoogle()
+              await signInWithGoogle();
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
             } catch (error) {
-              console.error(error);
               setClicked(false);
             }
           }}

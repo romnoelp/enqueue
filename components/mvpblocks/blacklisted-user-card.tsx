@@ -1,11 +1,10 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Mail, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { BlacklistedUserCardProps } from "./types/blacklisted-user-card.types";
-import { api } from "@/app/lib/config/api";
 
 const CARD_HEIGHT = "260px";
 const FLIP_DURATION = "700";
@@ -117,29 +116,12 @@ export default function BlacklistedUserCard({
   email,
   reason,
   blockedBy,
+  blockedByEmail,
   onRemove,
   removeLabel = "Remove",
 }: BlacklistedUserCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
-  const [blockedByUser, setBlockedByUser] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchUserDetails = async () => {
-      if (!blockedBy) return;
-      
-      try {
-        const response = await api.get(`/admin/users/${blockedBy}`);
-        const userData = response.data?.data || response.data;
-        const userName = userData?.name || userData?.email || userData?.displayName || blockedBy;
-        setBlockedByUser(userName);
-      } catch (error) {
-        console.error(`Failed to fetch user data for ${blockedBy}`, error);
-        setBlockedByUser(blockedBy); // Fallback to UID if fetch fails
-      }
-    };
-
-    fetchUserDetails();
-  }, [blockedBy]);
+  const blockedByUser = blockedByEmail || blockedBy || "Loading...";
 
   return (
     <div
